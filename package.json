@@ -1,0 +1,21 @@
+{
+  "name": "progenesis",
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "db:migrate": "cd apps/backend && npx prisma migrate dev",
+    "infra:up": "docker compose -f infrastructure/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "typescript": "^5",
+    "eslint": "^9",
+    "prettier": "^3"
+  }
+}
