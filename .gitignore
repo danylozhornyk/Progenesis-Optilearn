@@ -15,3 +15,12 @@ Thumbs.db
 .idea/
 coverage/
 .turbo/
+apps/backend/requests.http
+# Prisma generated client
+apps/backend/generated/
+
+# Prisma config (contains DB URL logic)
+apps/backend/prisma.config.ts
+
+# Migration lock file (optional, some teams commit this)
+apps/backend/prisma/migrations/migration_lock.toml

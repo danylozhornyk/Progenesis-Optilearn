@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+  GUEST
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  HIDDEN
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum TaskType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  OPEN_ANSWER
+}
+
+enum GraphType {
+  DIRECTED
+  UNDIRECTED
+  WEIGHTED
+  MIXED
+}
+
+enum AchievementCategory {
+  PROGRESS
+  SKILL
+  STREAK
+  SOCIAL
+}
+
+// ─── Models ──────────────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String    @unique @db.VarChar(254)
+  passwordHash      String    @db.VarChar(72)
+  role              UserRole  @default(STUDENT)
+  fullName          String    @db.VarChar(200)
+  isEmailVerified   Boolean   @default(false)
+  /// UI settings e.g. {"locale":"uk","theme":"dark","notifications":{"email":true,"push":false}}
+  preferences       Json      @default("{}")
+  createdAt         DateTime  @default(now()) @db.Timestamptz()
+  updatedAt         DateTime  @updatedAt @db.Timestamptz()
+
+  courses           Course[]
+  graphs            Graph[]
+  attempts          Attempt[]
+  progress          UserProgress[]
+  achievements      Achievement[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Course {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId       String          @db.Uuid
+  title          String          @db.VarChar(200)
+  description    String
+  discipline     String          @db.VarChar(100)
+  difficulty     DifficultyLevel
+  status         CourseStatus    @default(DRAFT)
+  coverImageUrl  String?         @db.VarChar(500)
+  isVisible      Boolean         @default(true)
+  createdAt      DateTime        @default(now()) @db.Timestamptz()
+  updatedAt      DateTime        @updatedAt @db.Timestamptz()
+
+  author         User            @relation(fields: [authorId], references: [id])
+  lessons        Lesson[]
+  progress       UserProgress[]
+
+  @@index([authorId])
+  @@index([discipline, difficulty])
+  @@index([status])
+  @@map("courses")
+}
+
+model Lesson {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId          String    @db.Uuid
+  prerequisiteId    String?   @db.Uuid
+  title             String    @db.VarChar(200)
+  orderIndex        Int
+  /// Array of content blocks e.g. [{type:"text",value:"..."},{type:"latex",value:"..."}]
+  content           Json      @default("[]")
+  estimatedMinutes  Int?
+  isMandatory       Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz()
+
+  course            Course    @relation(fields: [courseId], references: [id])
+  prerequisite      Lesson?   @relation("LessonPrerequisite", fields: [prerequisiteId], references: [id])
+  dependents        Lesson[]  @relation("LessonPrerequisite")
+  tests             Test[]
+
+  @@index([courseId, orderIndex])
+  @@index([prerequisiteId])
+  @@map("lessons")
+}
+
+model Test {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lessonId         String    @db.Uuid
+  title            String    @db.VarChar(200)
+  description      String?
+  /// NULL = no time limit
+  timeLimitMin     Int?
+  /// NULL = unlimited attempts
+  maxAttempts      Int?
+  /// Minimum % needed to pass
+  passingScore     Decimal   @default(60.0) @db.Decimal(5, 2)
+  shuffleQuestions Boolean   @default(false)
+  createdAt        DateTime  @default(now()) @db.Timestamptz()
+
+  lesson           Lesson    @relation(fields: [lessonId], references: [id])
+  tasks            Task[]
+
+  @@index([lessonId])
+  @@map("tests")
+}
+
+model Task {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  testId          String    @db.Uuid
+  /// Optional — attached graph for visual questions
+  graphId         String?   @db.Uuid
+  taskType        TaskType
+  orderIndex      Int
+  statement       String
+  /// For SINGLE_CHOICE and MULTIPLE_CHOICE: [{"id":"a","text":"Option A"}]. NULL for OPEN_ANSWER.
+  options         Json?
+  /// SINGLE_CHOICE: "b" | MULTIPLE_CHOICE: ["a","c"] | OPEN_ANSWER: expected value
+  correctAnswer   String
+  /// For numeric OPEN_ANSWER questions
+  answerTolerance Decimal?  @db.Decimal(20, 18)
+  maxScore        Decimal   @default(1.0) @db.Decimal(5, 2)
+  /// Shown after submission
+  explanation     String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz()
+
+  test            Test      @relation(fields: [testId], references: [id])
+  graph           Graph?    @relation(fields: [graphId], references: [id])
+  hints           Hint[]
+  attempts        Attempt[]
+
+  @@index([testId, orderIndex])
+  @@index([taskType])
+  @@index([graphId])
+  @@map("tasks")
+}
+
+model Hint {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskId     String   @db.Uuid
+  orderIndex Int
+  hintText   String
+
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, orderIndex])
+  @@map("hints")
+}
+
+model Graph {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// NULL for system/template graphs
+  userId      String?   @db.Uuid
+  title       String?   @db.VarChar(200)
+  graphType   GraphType
+  /// [{id,label,x,y,color}]
+  vertices    Json      @default("[]")
+  /// [{source,target,weight,label}]
+  edges       Json      @default("[]")
+  vertexCount Int       @default(0)
+  edgeCount   Int       @default(0)
+  createdAt   DateTime  @default(now()) @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @db.Timestamptz()
+
+  user        User?     @relation(fields: [userId], references: [id])
+  tasks       Task[]
+
+  @@index([userId])
+  @@index([graphType])
+  @@map("graphs")
+}
+
+model Attempt {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @db.Uuid
+  taskId        String    @db.Uuid
+  attemptNumber Int       @default(1)
+  /// SINGLE_CHOICE: {"selected":"b"} | MULTIPLE_CHOICE: {"selected":["a","c"]} | OPEN_ANSWER: {"text":"42"}
+  userAnswer    Json
+  isCorrect     Boolean   @default(false)
+  score         Decimal   @default(0) @db.Decimal(5, 2)
+  hintsUsed     Int       @default(0)
+  timeSpentMs   Int?
+  submittedAt   DateTime  @default(now()) @db.Timestamptz()
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task          Task      @relation(fields: [taskId], references: [id])
+
+  @@index([userId, taskId])
+  @@index([taskId, isCorrect])
+  @@index([submittedAt])
+  @@map("attempts")
+}
+
+model UserProgress {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @db.Uuid
+  courseId        String   @db.Uuid
+  /// Percentage of course completed (0-100)
+  progressPercent Decimal  @default(0) @db.Decimal(5, 2)
+  /// Accumulated score across all tasks in this course
+  totalScore      Int      @default(0)
+  updatedAt       DateTime @updatedAt @db.Timestamptz()
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@map("user_progress")
+}
+
+model Achievement {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String              @db.Uuid
+  code           String              @db.VarChar(50)
+  name           String              @db.VarChar(100)
+  description    String
+  category       AchievementCategory
+  iconUrl        String?             @db.VarChar(500)
+  pointsAwarded  Int                 @default(0)
+  awardedAt      DateTime            @default(now()) @db.Timestamptz()
+
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@index([userId])
+  @@index([category])
+  @@map("achievements")
+}
