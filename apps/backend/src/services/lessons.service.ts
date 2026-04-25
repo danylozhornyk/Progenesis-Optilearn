@@ -1,10 +1,21 @@
 import { prisma } from '../db/prisma';
+import {
+  getCachedLessons,
+  setCachedLessons,
+  invalidateLessonsCache,
+} from '../cache/lessons.cache';
 
-export function getLessonsByCourse(courseId: string) {
-  return prisma.lesson.findMany({
+export async function getLessonsByCourse(courseId: string) {
+  const cached = await getCachedLessons(courseId);
+  if (cached) return cached;
+
+  const lessons = await prisma.lesson.findMany({
     where: { courseId },
     orderBy: { orderIndex: 'asc' },
   });
+
+  await setCachedLessons(courseId, lessons);
+  return lessons;
 }
 
 export function getLessonById(id: string) {
@@ -26,7 +37,17 @@ export function getLessonById(id: string) {
   });
 }
 
-export function createLesson(data: {
+export function getLessonByIdPublic(id: string) {
+  return prisma.lesson.findUnique({
+    where: { id },
+    include: {
+      course: { select: { id: true, title: true } },
+      prerequisite: { select: { id: true, title: true } },
+    },
+  });
+}
+
+export async function createLesson(data: {
   courseId: string;
   title: string;
   orderIndex: number;
@@ -35,19 +56,28 @@ export function createLesson(data: {
   isMandatory?: boolean;
   prerequisiteId?: string;
 }) {
-  return prisma.lesson.create({ data });
+  const lesson = await prisma.lesson.create({ data });
+  await invalidateLessonsCache(data.courseId);
+  return lesson;
 }
 
-export function updateLesson(id: string, data: {
+export async function updateLesson(id: string, data: {
   title?: string;
   content?: object[];
   estimatedMinutes?: number;
   isMandatory?: boolean;
   orderIndex?: number;
 }) {
-  return prisma.lesson.update({ where: { id }, data });
+  const lesson = await prisma.lesson.update({ where: { id }, data });
+  await invalidateLessonsCache(lesson.courseId);
+  return lesson;
 }
 
-export function deleteLesson(id: string) {
-  return prisma.lesson.delete({ where: { id } });
+export async function deleteLesson(id: string) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id },
+    select: { courseId: true },
+  });
+  await prisma.lesson.delete({ where: { id } });
+  if (lesson) await invalidateLessonsCache(lesson.courseId);
 }

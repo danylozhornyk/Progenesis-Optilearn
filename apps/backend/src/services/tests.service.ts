@@ -1,12 +1,23 @@
 import { prisma } from '../db/prisma';
+import {
+  getCachedTests,
+  setCachedTests,
+  invalidateTestsCache,
+} from '../cache/tests.cache';
 
-export function getTestsByLesson(lessonId: string) {
-  return prisma.test.findMany({
+export async function getTestsByLesson(lessonId: string) {
+  const cached = await getCachedTests(lessonId);
+  if (cached) return cached;
+
+  const tests = await prisma.test.findMany({
     where: { lessonId },
     include: {
       _count: { select: { tasks: true } },
     },
   });
+
+  await setCachedTests(lessonId, tests);
+  return tests;
 }
 
 export function getTestById(id: string) {
@@ -16,16 +27,13 @@ export function getTestById(id: string) {
       lesson: { select: { id: true, title: true } },
       tasks: {
         orderBy: { orderIndex: 'asc' },
-        include: {
-          hints: { orderBy: { orderIndex: 'asc' } },
-          graph: true,
-        },
+        include: { graph: true },
       },
     },
   });
 }
 
-export function createTest(data: {
+export async function createTest(data: {
   lessonId: string;
   title: string;
   description?: string;
@@ -34,10 +42,12 @@ export function createTest(data: {
   passingScore?: number;
   shuffleQuestions?: boolean;
 }) {
-  return prisma.test.create({ data });
+  const test = await prisma.test.create({ data });
+  await invalidateTestsCache(data.lessonId);
+  return test;
 }
 
-export function updateTest(id: string, data: {
+export async function updateTest(id: string, data: {
   title?: string;
   description?: string;
   timeLimitMin?: number;
@@ -45,9 +55,17 @@ export function updateTest(id: string, data: {
   passingScore?: number;
   shuffleQuestions?: boolean;
 }) {
-  return prisma.test.update({ where: { id }, data });
+  const test = await prisma.test.update({ where: { id }, data });
+  await invalidateTestsCache(test.lessonId);
+  return test;
 }
 
-export function deleteTest(id: string) {
-  return prisma.test.delete({ where: { id } });
+export async function deleteTest(id: string) {
+  const test = await prisma.test.findUnique({
+    where: { id },
+    select: { lessonId: true },
+  });
+  await prisma.task.deleteMany({ where: { testId: id } });
+  await prisma.test.delete({ where: { id } });
+  if (test) await invalidateTestsCache(test.lessonId);
 }

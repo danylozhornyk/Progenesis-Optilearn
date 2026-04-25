@@ -2,16 +2,18 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import 'dotenv/config';
+import { connectRedis } from './cache/redis';
 
 import authRouter from './routes/auth.routes';
 import coursesRouter from './routes/courses.routes';
 import lessonsRouter from './routes/lessons.routes';
 import testsRouter from './routes/tests.routes';
 import tasksRouter from './routes/tasks.routes';
-import attemptsRouter from './routes/attempts.routes';
+import submissionsRouter from './routes/submissions.routes';
 import graphsRouter from './routes/graphs.routes';
 import usersRouter from './routes/users.routes';
 import achievementsRouter from './routes/achievements.routes';
+import recommendationsRouter from './routes/recommendations.routes';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,10 +32,11 @@ app.use('/courses', coursesRouter);
 app.use('/lessons', lessonsRouter);
 app.use('/tests', testsRouter);
 app.use('/tasks', tasksRouter);
-app.use('/attempts', attemptsRouter);
+app.use('/submissions', submissionsRouter);
 app.use('/graphs', graphsRouter);
 app.use('/users', usersRouter);
 app.use('/achievements', achievementsRouter);
+app.use('/recommendations', recommendationsRouter);
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -46,6 +49,11 @@ app.use((_req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
+async function start() {
+  await connectRedis();
+  app.listen(PORT, () => {
+    console.log(`Backend running on http://localhost:${PORT}`);
+  });
+}
+
+start();

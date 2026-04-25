@@ -15,6 +15,7 @@ Thumbs.db
 .idea/
 coverage/
 .turbo/
-apps/backend/requests.http
+*.http
 # Prisma generated client
 apps/backend/generated/
+apps/backend/prisma/migrations

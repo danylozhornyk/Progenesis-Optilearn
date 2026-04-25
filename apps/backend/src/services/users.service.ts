@@ -60,3 +60,24 @@ export function getUserProgress(userId: string) {
     orderBy: { updatedAt: 'desc' },
   });
 }
+
+export function updateUser(id: string, data: {
+  fullName?: string;
+  email?: string;
+}) {
+  return prisma.user.update({
+    where: { id },
+    data,
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      updatedAt: true,
+    },
+  });
+}
+
+export function deleteUser(id: string) {
+  return prisma.user.delete({ where: { id } });
+}

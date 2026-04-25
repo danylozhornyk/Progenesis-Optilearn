@@ -1,5 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../services/auth.service';
+import { verifyTokenNotBlacklisted } from '../services/auth.service';
+import {
+  checkLoginRateLimit,
+  checkRegisterRateLimit,
+  checkSubmissionRateLimit,
+} from '../cache/rateLimit.cache';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -8,7 +13,8 @@ export interface AuthRequest extends Request {
   };
 }
 
-export function authenticate(
+// ── Authenticate — checks token + blacklist ───────────────────
+export async function authenticate(
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -22,14 +28,17 @@ export function authenticate(
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = verifyToken(token);
+    const decoded = await verifyTokenNotBlacklisted(token);
     req.user = decoded;
     next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid or expired token' });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Invalid or expired token';
+    return res.status(401).json({ error: message });
   }
 }
 
+// ── Role guard ────────────────────────────────────────────────
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
@@ -42,4 +51,60 @@ export function requireRole(...roles: string[]) {
 
     next();
   };
+}
+
+// ── Rate limit middleware ─────────────────────────────────────
+export async function loginRateLimit(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const result = await checkLoginRateLimit(ip);
+
+  if (!result.allowed) {
+    return res.status(429).json({
+      error: 'Too many login attempts. Please try again later.',
+      resetInSeconds: result.resetInSeconds,
+    });
+  }
+
+  next();
+}
+
+export async function registerRateLimit(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const result = await checkRegisterRateLimit(ip);
+
+  if (!result.allowed) {
+    return res.status(429).json({
+      error: 'Too many registration attempts. Please try again later.',
+      resetInSeconds: result.resetInSeconds,
+    });
+  }
+
+  next();
+}
+
+export async function submissionRateLimit(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.user) return next();
+
+  const result = await checkSubmissionRateLimit(req.user.userId);
+
+  if (!result.allowed) {
+    return res.status(429).json({
+      error: 'Too many submissions. Please slow down.',
+      resetInSeconds: result.resetInSeconds,
+    });
+  }
+
+  next();
 }

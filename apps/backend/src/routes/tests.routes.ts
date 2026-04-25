@@ -6,9 +6,11 @@ import {
   updateTest,
   deleteTest,
 } from '../services/tests.service';
+import { authenticate, requireRole } from '../middleware/auth.middleware';
 
 const router = Router();
 
+// ── Public ────────────────────────────────────────────────────
 router.get('/lesson/:lessonId', async (req, res) => {
   try {
     const tests = await getTestsByLesson(req.params.lessonId);
@@ -18,7 +20,8 @@ router.get('/lesson/:lessonId', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+// ── Authenticated ─────────────────────────────────────────────
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const test = await getTestById(req.params.id);
     if (!test) return res.status(404).json({ error: 'Test not found' });
@@ -28,7 +31,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+// ── Teacher / Admin only ──────────────────────────────────────
+router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
     const test = await createTest(req.body);
     res.status(201).json(test);
@@ -37,7 +41,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
     const test = await updateTest(req.params.id, req.body);
     res.json(test);
@@ -46,7 +50,7 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
     await deleteTest(req.params.id);
     res.status(204).send();

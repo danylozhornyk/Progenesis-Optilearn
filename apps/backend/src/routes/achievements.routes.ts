@@ -3,11 +3,21 @@ import {
   getAchievementsByUser,
   awardAchievement,
 } from '../services/achievements.service';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/user/:userId', async (req, res) => {
+// ── Authenticated ─────────────────────────────────────────────
+router.get('/user/:userId', authenticate, async (req: AuthRequest, res) => {
   try {
+    // Students can only see their own achievements
+    if (
+      req.user!.role === 'STUDENT' &&
+      req.user!.userId !== req.params.userId
+    ) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
     const achievements = await getAchievementsByUser(req.params.userId);
     res.json(achievements);
   } catch {
@@ -15,7 +25,8 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+// ── Admin only ────────────────────────────────────────────────
+router.post('/', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const achievement = await awardAchievement(req.body);
     res.status(201).json(achievement);
