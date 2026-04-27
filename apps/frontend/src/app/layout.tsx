@@ -1,14 +1,24 @@
 import type { Metadata } from 'next';
+import './globals.css';
+import { AuthProvider } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Progenesis',
-  description: 'Interactive learning for graph theory, numerical methods, and optimization',
+  description: 'Interactive learning for mathematical disciplines',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className="theme-transition">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

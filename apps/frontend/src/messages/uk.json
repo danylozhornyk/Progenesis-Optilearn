@@ -1,0 +1,89 @@
+{
+  "common": {
+    "appName": "Progenesis",
+    "signIn": "Увійти",
+    "signOut": "Вийти",
+    "getStarted": "Почати",
+    "dashboard": "Панель",
+    "loading": "Завантаження...",
+    "error": "Щось пішло не так",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "back": "Назад",
+    "next": "Далі",
+    "submit": "Надіслати",
+    "copyright": "© {year} Progenesis",
+    "language": "Мова"
+  },
+  "landing": {
+    "headline": "Вивчайте математику",
+    "headlineMuted": "інтерактивно",
+    "description": "Опановуйте теорію графів, чисельні методи та задачі оптимізації через практичні вправи та миттєвий зворотний зв'язок.",
+    "startLearning": "Почати навчання"
+  },
+  "auth": {
+    "login": {
+      "title": "З поверненням",
+      "subtitle": "Введіть свої дані для входу в акаунт",
+      "email": "Електронна пошта",
+      "emailPlaceholder": "ви@example.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Забули пароль?",
+      "signingIn": "Вхід...",
+      "noAccount": "Немає акаунту?",
+      "signUp": "Зареєструватися",
+      "invalidCredentials": "Помилка входу"
+    },
+    "register": {
+      "title": "Створити акаунт",
+      "subtitle": "Почніть своє навчання сьогодні",
+      "fullName": "Повне ім'я",
+      "fullNamePlaceholder": "Іван Іваненко",
+      "email": "Електронна пошта",
+      "emailPlaceholder": "ви@example.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Підтвердіть пароль",
+      "creatingAccount": "Створення акаунту...",
+      "createAccount": "Створити акаунт",
+      "alreadyHaveAccount": "Вже є акаунт?",
+      "failed": "Помилка реєстрації"
+    },
+    "forgotPassword": {
+      "title": "Забули пароль",
+      "subtitle": "Введіть email і ми надішлемо посилання для скидання",
+      "email": "Електронна пошта",
+      "emailPlaceholder": "ви@example.com",
+      "sending": "Надсилання...",
+      "sendResetLink": "Надіслати посилання",
+      "rememberPassword": "Пам'ятаєте пароль?",
+      "checkEmail": "Перевірте пошту",
+      "checkEmailDescription": "Якщо акаунт з таким email існує, ми надіслали посилання для скидання пароля. Посилання діє 1 годину."
+    },
+    "resetPassword": {
+      "title": "Скинути пароль",
+      "subtitle": "Введіть новий пароль нижче",
+      "newPassword": "Новий пароль",
+      "confirmPassword": "Підтвердіть новий пароль",
+      "resetting": "Скидання...",
+      "reset": "Скинути пароль",
+      "invalidLink": "Недійсне посилання",
+      "invalidLinkDescription": "Це посилання для скидання пароля недійсне або застаріле.",
+      "requestNewLink": "Запросити нове посилання"
+    },
+    "branding": {
+      "quote": "Математика — це не числа, рівняння чи алгоритми — це розуміння.",
+      "quoteAuthor": "Вільям Пол Терстон"
+    },
+    "emailVerification": {
+      "banner": "Будь ласка, підтвердіть вашу електронну адресу. Перевірте вхідні повідомлення."
+    }
+  },
+  "dashboard": {
+    "title": "Панель керування",
+    "welcome": "З поверненням, {name}"
+  }
+}
