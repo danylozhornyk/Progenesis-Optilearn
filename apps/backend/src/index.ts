@@ -20,6 +20,9 @@ import graphsRouter from './routes/graphs.routes';
 import usersRouter from './routes/users.routes';
 import achievementsRouter from './routes/achievements.routes';
 import recommendationsRouter from './routes/recommendations.routes';
+import uploadsRouter from './routes/uploads.routes';
+import { initStorage } from './storage';
+import { UPLOADS_DIR } from './storage/local.storage';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -51,12 +54,18 @@ const httpErrorTotal = new Counter({
 });
 
 // ── Middleware ────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  // Allow the frontend origin to load images served from this API
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
 }));
 app.use(express.json());
+
+// ── Static file serving — uploaded images ─────────────────────
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ── Metrics middleware — records every request ────────────────
 app.use((req, res, next) => {
@@ -93,6 +102,7 @@ app.use('/graphs', graphsRouter);
 app.use('/users', usersRouter);
 app.use('/achievements', achievementsRouter);
 app.use('/recommendations', recommendationsRouter);
+app.use('/uploads', uploadsRouter);
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -117,6 +127,7 @@ app.use((_req, res) => {
 // ── Start ─────────────────────────────────────────────────────
 async function start() {
   await connectRedis();
+  await initStorage();
   app.listen(PORT, () => {
     console.log(`Backend running on http://localhost:${PORT}`);
     console.log(`Metrics available at http://localhost:${PORT}/metrics`);

@@ -19,3 +19,6 @@ coverage/
 # Prisma generated client
 apps/backend/generated/
 apps/backend/prisma/migrations
+# Uploaded images (keep the directory, ignore its contents)
+apps/backend/uploads/*
+!apps/backend/uploads/.gitkeep

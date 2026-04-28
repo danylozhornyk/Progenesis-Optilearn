@@ -15,6 +15,7 @@ interface User {
   fullName: string;
   role: string;
   isEmailVerified: boolean;
+  avatarUrl?: string;
   preferences: {
     locale?: string;
     theme?: string;

@@ -38,8 +38,8 @@ router.get('/:id', async (req: AuthRequest, res) => {
   }
 });
 
-// ── Teacher / Admin only ──────────────────────────────────────
-router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+// ── Admin only ────────────────────────────────────────────────
+router.post('/', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const lesson = await createLesson(req.body);
     res.status(201).json(lesson);
@@ -48,7 +48,7 @@ router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res)
   }
 });
 
-router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.patch('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const lesson = await updateLesson(req.params.id, req.body);
     res.json(lesson);
@@ -57,7 +57,7 @@ router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, 
   }
 });
 
-router.delete('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     await deleteLesson(req.params.id);
     res.status(204).send();

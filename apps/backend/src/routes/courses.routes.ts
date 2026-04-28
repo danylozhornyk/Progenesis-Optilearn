@@ -30,8 +30,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ── Teacher / Admin only ──────────────────────────────────────
-router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+// ── Admin only ────────────────────────────────────────────────
+router.post('/', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const course = await createCourse(req.body);
     res.status(201).json(course);
@@ -40,7 +40,7 @@ router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res)
   }
 });
 
-router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.patch('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const course = await updateCourse(req.params.id, req.body);
     res.json(course);
@@ -49,7 +49,7 @@ router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, 
   }
 });
 
-router.delete('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     await deleteCourse(req.params.id);
     res.status(204).send();

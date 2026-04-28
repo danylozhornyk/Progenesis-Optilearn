@@ -53,6 +53,25 @@ services:
       timeout: 10s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: progenesis_minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console  →  http://localhost:9001
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   prometheus:
     image: prom/prometheus:latest
     container_name: progenesis_prometheus
@@ -87,5 +106,6 @@ volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+  minio_data:
   prometheus_data:
   grafana_data:

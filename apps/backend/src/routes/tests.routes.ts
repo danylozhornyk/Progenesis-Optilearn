@@ -31,8 +31,8 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// ── Teacher / Admin only ──────────────────────────────────────
-router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+// ── Admin only ────────────────────────────────────────────────
+router.post('/', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const test = await createTest(req.body);
     res.status(201).json(test);
@@ -41,7 +41,7 @@ router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res)
   }
 });
 
-router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.patch('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const test = await updateTest(req.params.id, req.body);
     res.json(test);
@@ -50,7 +50,7 @@ router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, 
   }
 });
 
-router.delete('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     await deleteTest(req.params.id);
     res.status(204).send();

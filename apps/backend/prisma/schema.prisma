@@ -11,7 +11,6 @@ datasource db {
 
 enum UserRole {
   STUDENT
-  TEACHER
   ADMIN
   GUEST
 }
@@ -63,6 +62,7 @@ model User {
   role            UserRole       @default(STUDENT)
   fullName        String         @db.VarChar(200)
   isEmailVerified Boolean        @default(false)
+  avatarUrl       String?        @db.VarChar(500)
   /// UI settings e.g. {"locale":"uk","theme":"dark","notifications":{"email":true,"push":false}}
   preferences     Json           @default("{}")
   createdAt       DateTime       @default(now()) @db.Timestamptz()
@@ -161,7 +161,8 @@ model Task {
   answerTolerance Decimal? @db.Decimal(20, 18)
   maxScore        Decimal  @default(1.0) @db.Decimal(5, 2)
   explanation     String?
-  hint            String?
+  /// [{strength:0-100, text:"..."}] — higher strength = more explicit hint; served based on user progress
+  hints           Json     @default("[]")
   createdAt       DateTime @default(now()) @db.Timestamptz()
 
   test  Test   @relation(fields: [testId], references: [id], onDelete: Cascade)

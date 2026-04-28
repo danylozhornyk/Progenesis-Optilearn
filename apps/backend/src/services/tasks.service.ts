@@ -6,6 +6,11 @@ import {
   invalidateTasksCache,
 } from '../cache/tasks.cache';
 
+export interface HintEntry {
+  strength: number; // 0–100: higher = more explicit
+  text: string;
+}
+
 export async function getTasksByTest(testId: string) {
   const cached = await getCachedTasks(testId);
   if (cached) return cached;
@@ -40,7 +45,7 @@ export async function createTask(data: {
   answerTolerance?: number;
   maxScore?: number;
   explanation?: string;
-  hint?: string;
+  hints?: HintEntry[];
   graphId?: string;
 }) {
   const task = await prisma.task.create({ data });
@@ -55,7 +60,7 @@ export async function updateTask(id: string, data: {
   answerTolerance?: number;
   maxScore?: number;
   explanation?: string;
-  hint?: string | null;
+  hints?: HintEntry[];
   graphId?: string | null;
 }) {
   const task = await prisma.task.update({ where: { id }, data });
@@ -74,22 +79,57 @@ export async function deleteTask(id: string) {
 
 // ── Hint helpers ──────────────────────────────────────────────
 
-export async function setHint(taskId: string, hint: string) {
+export async function setHints(taskId: string, hints: HintEntry[]) {
   const task = await prisma.task.update({
     where: { id: taskId },
-    data: { hint },
-    select: { id: true, hint: true, testId: true },
+    data: { hints },
+    select: { id: true, hints: true, testId: true },
   });
   await invalidateTasksCache(task.testId);
-  return { id: task.id, hint: task.hint };
+  return { id: task.id, hints: task.hints };
 }
 
-export async function removeHint(taskId: string) {
+export async function removeHints(taskId: string) {
   const task = await prisma.task.update({
     where: { id: taskId },
-    data: { hint: null },
-    select: { id: true, hint: true, testId: true },
+    data: { hints: [] },
+    select: { id: true, hints: true, testId: true },
   });
   await invalidateTasksCache(task.testId);
-  return { id: task.id, hint: task.hint };
+  return { id: task.id, hints: task.hints };
+}
+
+// ── Scaffolded hint for a user ────────────────────────────────
+
+export async function getHintForUser(taskId: string, userId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { hints: true },
+  });
+  if (!task) return null;
+
+  const hints = task.hints as HintEntry[];
+  if (!hints || hints.length === 0) return { hint: null, progressPercent: 0 };
+
+  // Compute user's global score percentage across all completed tests
+  const submissions = await prisma.testSubmission.findMany({
+    where: { userId },
+    select: { totalScore: true, maxScore: true },
+  });
+
+  const totalObtained = submissions.reduce((sum, s) => sum + Number(s.totalScore), 0);
+  const totalMax = submissions.reduce((sum, s) => sum + Number(s.maxScore), 0);
+  const progressPercent = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
+
+  // Lower progress → need stronger (more explicit) hint
+  // Higher progress → need weaker (more subtle) hint
+  const targetStrength = 100 - progressPercent;
+
+  const best = hints.reduce((prev, curr) =>
+    Math.abs(curr.strength - targetStrength) < Math.abs(prev.strength - targetStrength)
+      ? curr
+      : prev
+  );
+
+  return { hint: best, progressPercent };
 }

@@ -9,6 +9,8 @@
     "lint": "turbo lint",
     "test": "turbo test",
     "db:migrate": "cd apps/backend && npx prisma migrate dev",
+    "db:seed": "cd apps/backend && npx prisma db seed",
+    "db:reset": "cd apps/backend && npx prisma migrate reset",
     "infra:up": "docker compose -f infrastructure/docker-compose.yml up -d",
     "infra:down": "docker compose -f infrastructure/docker-compose.yml down"
   },

@@ -71,7 +71,7 @@ router.get('/:id', authenticate, async (req: AuthRequest, res) => {
 router.get(
   '/test/:testId',
   authenticate,
-  requireRole('TEACHER', 'ADMIN'),
+  requireRole('ADMIN'),
   async (req, res) => {
     try {
       const submissions = await getSubmissionsByTest(req.params.testId);

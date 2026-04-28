@@ -118,12 +118,23 @@ export default function Header() {
           {/* Auth buttons */}
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground mr-1 hidden sm:block">
-                {user.fullName}
-              </span>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard">{t('common.dashboard')}</Link>
-              </Button>
+              <Link
+                href="/dashboard"
+                title={user.fullName}
+                className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border hover:ring-2 hover:ring-foreground transition-all flex items-center justify-center bg-muted shrink-0"
+              >
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-foreground select-none">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </Link>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
                 {t('common.signOut')}
               </Button>

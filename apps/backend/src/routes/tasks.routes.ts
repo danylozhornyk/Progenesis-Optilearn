@@ -5,10 +5,11 @@ import {
   createTask,
   updateTask,
   deleteTask,
-  setHint,
-  removeHint,
+  setHints,
+  removeHints,
+  getHintForUser,
 } from '../services/tasks.service';
-import { authenticate, requireRole } from '../middleware/auth.middleware';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -33,9 +34,9 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// ── Teacher / Admin only ──────────────────────────────────────
+// ── Admin only ────────────────────────────────────────────────
 
-router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.post('/', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const task = await createTask(req.body);
     res.status(201).json(task);
@@ -44,7 +45,7 @@ router.post('/', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res)
   }
 });
 
-router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.patch('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     const task = await updateTask(req.params.id, req.body);
     res.json(task);
@@ -53,7 +54,7 @@ router.patch('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, 
   }
 });
 
-router.delete('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
     await deleteTask(req.params.id);
     res.status(204).send();
@@ -62,29 +63,53 @@ router.delete('/:id', authenticate, requireRole('TEACHER', 'ADMIN'), async (req,
   }
 });
 
-// ── Hint management — Teacher / Admin only ────────────────────
+// ── Hint — user-facing (scaffolded) ──────────────────────────
 
-router.put('/:id/hint', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+router.get('/:id/hint', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { hint } = req.body;
-
-    if (!hint || typeof hint !== 'string') {
-      return res.status(400).json({ error: 'hint string is required' });
-    }
-
-    const task = await setHint(req.params.id, hint);
-    res.json(task);
+    const result = await getHintForUser(req.params.id, req.user!.userId);
+    if (result === null) return res.status(404).json({ error: 'Task not found' });
+    res.json(result);
   } catch {
-    res.status(500).json({ error: 'Failed to set hint' });
+    res.status(500).json({ error: 'Failed to fetch hint' });
   }
 });
 
-router.delete('/:id/hint', authenticate, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+// ── Hint management — Admin only ─────────────────────────────
+
+router.put('/:id/hint', authenticate, requireRole('ADMIN'), async (req, res) => {
   try {
-    const task = await removeHint(req.params.id);
+    const { hints } = req.body;
+
+    if (
+      !Array.isArray(hints) ||
+      hints.some(
+        (h) =>
+          typeof h.strength !== 'number' ||
+          h.strength < 0 ||
+          h.strength > 100 ||
+          typeof h.text !== 'string' ||
+          h.text.trim() === ''
+      )
+    ) {
+      return res.status(400).json({
+        error: 'hints must be an array of { strength: 0–100, text: string }',
+      });
+    }
+
+    const task = await setHints(req.params.id, hints);
     res.json(task);
   } catch {
-    res.status(500).json({ error: 'Failed to remove hint' });
+    res.status(500).json({ error: 'Failed to set hints' });
+  }
+});
+
+router.delete('/:id/hint', authenticate, requireRole('ADMIN'), async (req, res) => {
+  try {
+    const task = await removeHints(req.params.id);
+    res.json(task);
+  } catch {
+    res.status(500).json({ error: 'Failed to remove hints' });
   }
 });
 
