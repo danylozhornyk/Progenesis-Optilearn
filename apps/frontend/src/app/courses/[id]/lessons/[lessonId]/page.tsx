@@ -321,16 +321,21 @@ export default function LessonPage() {
                           const passed = sub?.passed;
 
                           if (passed) {
+                            const earned = Number(sub.totalScore);
+                            const max = Number(sub.maxScore);
+                            // Trim trailing .0 / .00 for clean display.
+                            const fmt = (n: number) =>
+                              Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '');
                             return (
                               <Link
                                 href={`/tests/${test.id}`}
                                 title={t('test.alreadyPassedNotice')}
-                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors tabular-nums"
                               >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M20 6 9 17l-5-5"/>
                                 </svg>
-                                {t('test.passed')} · {Math.round(Number(sub.percentScore))}%
+                                {t('test.passed')} · {fmt(earned)}/{fmt(max)}
                               </Link>
                             );
                           }

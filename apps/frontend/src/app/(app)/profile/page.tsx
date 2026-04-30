@@ -50,7 +50,7 @@ function XIcon() {
 
 function LockIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </svg>
@@ -73,6 +73,8 @@ interface CourseProgress {
   completedLessons: number;
   totalTests: number;
   passedTests: number;
+  earnedMarks: number;
+  maxMarks: number;
   progressPercent: number;
   totalScore: number;
   enrolled: boolean;
@@ -660,7 +662,7 @@ export default function ProfilePage() {
                     )}
 
                     {/* Counts */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground gap-3 flex-wrap">
                       <span>
                         <span className="text-foreground font-medium">{t('profile.progress.lessons')}:</span>{' '}
                         {t('profile.progress.lessonsProgress', { done: c.completedLessons, total: c.totalLessons })}
@@ -670,6 +672,18 @@ export default function ProfilePage() {
                         {t('profile.progress.testsProgress', { done: c.passedTests, total: c.totalTests })}
                       </span>
                     </div>
+
+                    {/* Marks: sum of best test scores / total possible across the course */}
+                    {c.maxMarks > 0 && (
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          <span className="text-foreground font-medium">{t('profile.progress.marks')}:</span>{' '}
+                          <span className="tabular-nums">
+                            {t('profile.progress.marksProgress', { earned: c.earnedMarks, total: c.maxMarks })}
+                          </span>
+                        </span>
+                      </div>
+                    )}
 
                     {c.status === 'NOT_ENROLLED' && (
                       <p className="text-[11px] text-muted-foreground italic">
@@ -698,8 +712,17 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {definitions.map((def) => {
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-3 gap-y-6">
+                {[...definitions]
+                  .sort((a, b) => {
+                    // Earned group first, locked group second.
+                    // Within each group sort by pointsAwarded descending.
+                    const aEarned = earnedByCode.has(a.code);
+                    const bEarned = earnedByCode.has(b.code);
+                    if (aEarned !== bEarned) return aEarned ? -1 : 1;
+                    return b.pointsAwarded - a.pointsAwarded;
+                  })
+                  .map((def) => {
                   const earnedRow = earnedByCode.get(def.code);
                   const isEarned = !!earnedRow;
                   const name = (locale === 'uk' && def.nameUk) ? def.nameUk : def.name;
@@ -709,79 +732,108 @@ export default function ProfilePage() {
                         year: 'numeric', month: 'short', day: 'numeric',
                       })
                     : null;
+                  // Pointy-top hexagon clip-path.
+                  const hexClip = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
                   return (
                     <div
                       key={def.code}
-                      className="relative group flex flex-col items-center text-center surface p-4 hover:border-foreground/40 transition-colors"
+                      className="group flex flex-col items-center gap-1.5"
+                      tabIndex={0}
+                      aria-label={name}
                     >
-                      {/* Badge circle */}
-                      <div className="relative">
+                      {/* Hex badge + status indicator wrapper */}
+                      <div className="relative w-20 h-[88px] transition-transform group-hover:scale-105">
+
+                        {/* ── Border layer (outer hex, full size) ── */}
                         <div
-                          className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0 shadow-sm ${
+                          className={`absolute inset-0 ${
+                            isEarned
+                              ? 'bg-white/30 dark:bg-white/20 drop-shadow-md'
+                              : 'bg-slate-400 dark:bg-slate-500'
+                          }`}
+                          style={{ clipPath: hexClip }}
+                        />
+
+                        {/* ── Fill layer (inner hex, inset 3px on each side) ── */}
+                        <div
+                          className={`absolute flex items-center justify-center ${
                             isEarned
                               ? `bg-gradient-to-br ${CATEGORY_GRADIENTS[def.category]}`
-                              : 'bg-gradient-to-br from-muted-foreground/40 to-muted-foreground/20 grayscale opacity-60'
+                              : 'bg-slate-200 dark:bg-slate-600'
                           }`}
+                          style={{
+                            clipPath: hexClip,
+                            top: 3,
+                            left: 3,
+                            width: 'calc(100% - 6px)',
+                            height: 'calc(100% - 6px)',
+                          }}
                         >
                           {def.iconUrl ? (
-                            <img src={def.iconUrl} alt={name} className="w-full h-full rounded-full object-cover" />
+                            <img
+                              src={def.iconUrl}
+                              alt=""
+                              className="w-full h-full object-contain p-2 select-none"
+                              draggable={false}
+                            />
                           ) : (
-                            <span className={isEarned ? '' : 'opacity-70'}>{CATEGORY_LETTER[def.category]}</span>
+                            <span className={`text-2xl font-bold ${isEarned ? 'text-white' : 'text-slate-400 dark:text-slate-400'}`}>
+                              {CATEGORY_LETTER[def.category]}
+                            </span>
                           )}
                         </div>
-                        {/* Lock overlay for unearned */}
-                        {!isEarned && (
-                          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border border-border flex items-center justify-center text-muted-foreground">
-                            <LockIcon />
-                          </div>
-                        )}
-                        {isEarned && (
-                          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border border-green-300 dark:border-green-700 flex items-center justify-center text-green-600 dark:text-green-400">
-                            <CheckIcon />
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Title */}
-                      <p className={`mt-3 text-sm font-medium leading-tight ${isEarned ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {name}
-                      </p>
-
-                      {/* Status row */}
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        {isEarned ? t('profile.achievements.earned') : t('profile.achievements.locked')}
-                      </p>
-
-                      {/* Hover tooltip */}
-                      <div
-                        role="tooltip"
-                        className="pointer-events-none absolute z-20 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 p-3 rounded-lg bg-foreground text-background text-xs leading-relaxed shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity space-y-1.5 text-left"
-                      >
-                        <p className="font-semibold text-sm">{name}</p>
-                        <p className="opacity-80">
-                          <span className="font-medium opacity-100">{t('profile.achievements.howTo')}:</span>{' '}
-                          {description}
-                        </p>
-                        <div className="flex items-center justify-between pt-1 border-t border-background/20">
-                          <span className="opacity-80">
-                            {t('profile.achievements.category')}:{' '}
-                            <span className="font-medium opacity-100">
-                              {t(`profile.achievements.categoryLabel.${def.category}`)}
-                            </span>
-                          </span>
-                          <span className="opacity-80 font-medium">
-                            {t('profile.achievements.points', { n: def.pointsAwarded })}
-                          </span>
+                        {/* Status indicator */}
+                        <div
+                          className={`absolute -bottom-1 right-0 w-7 h-7 rounded-full flex items-center justify-center shadow ring-2 ring-background ${
+                            isEarned
+                              ? 'bg-green-500 text-white'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {isEarned ? <CheckIcon /> : <LockIcon />}
                         </div>
-                        {earnedDate && (
-                          <p className="opacity-70 pt-1 border-t border-background/20">
-                            {t('profile.achievements.earnedOn', { date: earnedDate })}
+
+                        {/* Hover/focus tooltip — holds ALL meta */}
+                        <div
+                          role="tooltip"
+                          className="pointer-events-none absolute z-20 left-1/2 -translate-x-1/2 bottom-full mb-3 w-60 p-3 rounded-lg bg-foreground text-background text-xs leading-relaxed shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity space-y-1.5 text-left"
+                        >
+                          <p className="font-semibold text-sm">{name}</p>
+                          <p className="opacity-90 text-[11px] uppercase tracking-wide">
+                            {isEarned ? t('profile.achievements.earned') : t('profile.achievements.locked')}
                           </p>
-                        )}
-                        {/* Arrow */}
-                        <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-foreground rotate-45" />
+                          <p className="opacity-80">
+                            <span className="font-medium opacity-100">{t('profile.achievements.howTo')}:</span>{' '}
+                            {description}
+                          </p>
+                          <div className="flex items-center justify-between pt-1 border-t border-background/20">
+                            <span className="opacity-80">
+                              {t('profile.achievements.category')}:{' '}
+                              <span className="font-medium opacity-100">
+                                {t(`profile.achievements.categoryLabel.${def.category}`)}
+                              </span>
+                            </span>
+                            <span className="opacity-80 font-medium">
+                              {t('profile.achievements.points', { n: def.pointsAwarded })}
+                            </span>
+                          </div>
+                          {earnedDate && (
+                            <p className="opacity-70 pt-1 border-t border-background/20">
+                              {t('profile.achievements.earnedOn', { date: earnedDate })}
+                            </p>
+                          )}
+                          {/* Arrow */}
+                          <span className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-foreground rotate-45" />
+                        </div>
                       </div>
+
+                      {/* Points label — always visible below badge */}
+                      <span className="text-[11px] tabular-nums font-medium leading-none text-muted-foreground">
+                        {t('profile.achievements.points', { n: def.pointsAwarded })}
+                      </span>
                     </div>
                   );
                 })}

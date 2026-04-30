@@ -232,6 +232,8 @@
       "tests": "Tests",
       "lessonsProgress": "{done}/{total} completed",
       "testsProgress": "{done}/{total} passed",
+      "marks": "Marks",
+      "marksProgress": "{earned}/{total} pts",
       "notStarted": "Not started",
       "notEnrolled": "Not enrolled",
       "inProgress": "In progress",

@@ -162,7 +162,12 @@ export async function getDetailedCourseProgress(userId: string) {
       lessons: {
         select: {
           id: true,
-          tests: { select: { id: true } },
+          tests: {
+            select: {
+              id: true,
+              tasks: { select: { maxScore: true } },
+            },
+          },
         },
       },
     },
@@ -170,6 +175,8 @@ export async function getDetailedCourseProgress(userId: string) {
   });
 
   const allTestIds = courses.flatMap((c) => c.lessons.flatMap((l) => l.tests.map((t) => t.id)));
+
+  // Passed-test set (for completion booleans).
   const passedSubs = allTestIds.length
     ? await prisma.testSubmission.findMany({
         where: { userId, testId: { in: allTestIds }, passed: true },
@@ -177,6 +184,22 @@ export async function getDetailedCourseProgress(userId: string) {
       })
     : [];
   const passedTestIds = new Set(passedSubs.map((s) => s.testId));
+
+  // Best score per test (passed first, highest totalScore second).
+  // Used to compute the user's earned marks for each course.
+  const allSubs = allTestIds.length
+    ? await prisma.testSubmission.findMany({
+        where: { userId, testId: { in: allTestIds } },
+        select: { testId: true, totalScore: true, passed: true },
+        orderBy: [{ passed: 'desc' }, { totalScore: 'desc' }],
+      })
+    : [];
+  const bestScoreByTest = new Map<string, number>();
+  for (const s of allSubs) {
+    if (!bestScoreByTest.has(s.testId)) {
+      bestScoreByTest.set(s.testId, Number(s.totalScore));
+    }
+  }
 
   const progressRows = await prisma.userProgress.findMany({
     where: { userId },
@@ -189,6 +212,8 @@ export async function getDetailedCourseProgress(userId: string) {
     let completedLessons = 0;
     let totalTests = 0;
     let passedTests = 0;
+    let earnedMarks = 0;
+    let maxMarks = 0;
 
     for (const lesson of c.lessons) {
       totalLessons++;
@@ -198,6 +223,12 @@ export async function getDetailedCourseProgress(userId: string) {
       const allLessonTestsPassed =
         lesson.tests.length > 0 && lessonPassedCount === lesson.tests.length;
       if (allLessonTestsPassed) completedLessons++;
+
+      for (const test of lesson.tests) {
+        const testMax = test.tasks.reduce((sum, t) => sum + Number(t.maxScore), 0);
+        maxMarks += testMax;
+        earnedMarks += bestScoreByTest.get(test.id) ?? 0;
+      }
     }
 
     const progress = progressByCourse.get(c.id);
@@ -232,6 +263,8 @@ export async function getDetailedCourseProgress(userId: string) {
       completedLessons,
       totalTests,
       passedTests,
+      earnedMarks: Math.round(earnedMarks * 100) / 100,
+      maxMarks: Math.round(maxMarks * 100) / 100,
       progressPercent,
       totalScore: progress?.totalScore ?? 0,
       enrolled,

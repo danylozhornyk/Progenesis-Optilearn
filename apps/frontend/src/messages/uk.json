@@ -232,6 +232,8 @@
       "tests": "Тести",
       "lessonsProgress": "{done}/{total} завершено",
       "testsProgress": "{done}/{total} пройдено",
+      "marks": "Бали",
+      "marksProgress": "{earned}/{total} балів",
       "notStarted": "Не розпочато",
       "notEnrolled": "Не записані",
       "inProgress": "У процесі",
