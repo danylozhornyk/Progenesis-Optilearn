@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import { storage, initStorage } from '../src/storage';
+import { invalidateCoursesCache } from '../src/cache/courses.cache';
 
 // ── Image helpers ─────────────────────────────────────────────
 
@@ -246,6 +247,7 @@ async function main() {
     data: {
       userId: null,
       title: 'Simple Undirected Graph (5 vertices, 6 edges)',
+      titleUk: 'Простий неорієнтований граф (5 вершин, 6 ребер)',
       graphType: 'UNDIRECTED',
       vertices: [
         { id: 'v1', label: 'A', x: 100, y: 200 },
@@ -271,6 +273,7 @@ async function main() {
     data: {
       userId: null,
       title: 'Simple Directed Graph — S→A→T, S→B→T',
+      titleUk: 'Простий орієнтований граф — S→A→T, S→B→T',
       graphType: 'DIRECTED',
       vertices: [
         { id: 'v1', label: 'S', x: 100, y: 200 },
@@ -294,6 +297,7 @@ async function main() {
     data: {
       userId: null,
       title: 'Weighted Graph — Shortest Path Example',
+      titleUk: 'Зважений граф — приклад найкоротшого шляху',
       graphType: 'WEIGHTED',
       vertices: [
         { id: 'v1', label: 'A', x: 100, y: 200 },
@@ -322,9 +326,13 @@ async function main() {
     data: {
       authorId: admin.id,
       title: 'Introduction to Graph Theory',
+      titleUk: 'Вступ до теорії графів',
       description:
         'Learn the fundamentals of graph theory: vertices, edges, paths, and traversal algorithms used throughout computer science and mathematics.',
+      descriptionUk:
+        'Вивчіть основи теорії графів: вершини, ребра, шляхи та алгоритми обходу, які використовуються в інформатиці та математиці.',
       discipline: 'Graph Theory',
+      disciplineUk: 'Теорія графів',
       difficulty: 'BEGINNER',
       status: 'PUBLISHED',
       isVisible: true,
@@ -337,6 +345,7 @@ async function main() {
     data: {
       courseId: course1.id,
       title: 'Basic Concepts',
+      titleUk: 'Основні поняття',
       orderIndex: 1,
       isMandatory: true,
       estimatedMinutes: 20,
@@ -347,6 +356,13 @@ async function main() {
         { type: 'text', value: 'The degree of a vertex is the number of edges incident to it.' },
         { type: 'latex', value: '\\deg(v) = |\\{e \\in E : v \\in e\\}|' },
       ],
+      contentUk: [
+        { type: 'text', value: 'Граф G = (V, E) складається з множини вершин V та множини ребер E, що сполучають пари вершин.' },
+        { type: 'latex', value: 'G = (V,\\, E)' },
+        { type: 'text', value: 'Графи можуть бути орієнтованими (ребра мають напрямок) або неорієнтованими. Ребра також можуть мати ваги.' },
+        { type: 'text', value: 'Степінь вершини — це кількість ребер, інцидентних до неї.' },
+        { type: 'latex', value: '\\deg(v) = |\\{e \\in E : v \\in e\\}|' },
+      ],
     },
   });
 
@@ -354,7 +370,9 @@ async function main() {
     data: {
       lessonId: lesson1_1.id,
       title: 'Graph Fundamentals Quiz',
+      titleUk: 'Тест: Основи графів',
       description: 'Test your understanding of basic graph vocabulary and structure.',
+      descriptionUk: 'Перевірте своє розуміння базової термінології та структури графів.',
       timeLimitMin: 10,
       maxAttempts: 3,
       passingScore: 60,
@@ -368,19 +386,32 @@ async function main() {
       orderIndex: 1,
       taskType: 'SINGLE_CHOICE',
       statement: 'What is a vertex in a graph?',
+      statementUk: 'Що таке вершина в графі?',
       options: [
         { id: 'a', text: 'A connection between two nodes' },
         { id: 'b', text: 'A fundamental unit (node) of a graph' },
         { id: 'c', text: 'A path from one node to another' },
         { id: 'd', text: 'A subset of edges' },
       ],
+      optionsUk: [
+        { id: 'a', text: "З'єднання між двома вузлами" },
+        { id: 'b', text: 'Фундаментальна одиниця (вузол) графа' },
+        { id: 'c', text: 'Шлях від одного вузла до іншого' },
+        { id: 'd', text: 'Підмножина ребер' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: 'A vertex (or node) is the fundamental unit of a graph. Edges are the connections between vertices.',
+      explanationUk: "Вершина (або вузол) — це фундаментальна одиниця графа. Ребра — це з'єднання між вершинами.",
       hints: [
         { strength: 100, text: 'In G = (V, E), what does V represent? Each element of V is a …' },
         { strength: 50, text: 'Think of the dots in a graph diagram — they are called vertices.' },
         { strength: 0, text: 'A vertex is the basic point or node that edges connect together.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'У G = (V, E), що представляє V? Кожен елемент V — це …' },
+        { strength: 50, text: 'Подумайте про крапки в діаграмі графа — вони називаються вершинами.' },
+        { strength: 0, text: "Вершина — це базова точка або вузол, з'єднаний ребрами." },
       ],
     },
   });
@@ -391,6 +422,7 @@ async function main() {
       orderIndex: 2,
       taskType: 'MULTIPLE_CHOICE',
       statement: 'Which of the following are standard types of graphs? (Select all that apply)',
+      statementUk: 'Які з наведених є стандартними типами графів? (Виберіть усе, що підходить)',
       options: [
         { id: 'a', text: 'Directed graph' },
         { id: 'b', text: 'Undirected graph' },
@@ -398,13 +430,26 @@ async function main() {
         { id: 'd', text: 'Weighted graph' },
         { id: 'e', text: 'Circular graph' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Орієнтований граф' },
+        { id: 'b', text: 'Неорієнтований граф' },
+        { id: 'c', text: 'Діагональний граф' },
+        { id: 'd', text: 'Зважений граф' },
+        { id: 'e', text: 'Круговий граф' },
+      ],
       correctAnswer: JSON.stringify(['a', 'b', 'd']),
       maxScore: 2,
       explanation: 'Directed, undirected, and weighted are standard graph types. "Diagonal" and "circular" are not recognised graph classifications.',
+      explanationUk: 'Орієнтовані, неорієнтовані та зважені — це стандартні типи графів. «Діагональні» та «кругові» не є визнаними класифікаціями графів.',
       hints: [
         { strength: 100, text: 'Think about two properties an edge can have: direction and weight. Each gives rise to a graph type.' },
         { strength: 50, text: 'Three options are valid standard types — look for terms used in textbooks: directed, undirected, weighted.' },
         { strength: 0, text: 'The correct answers are: directed, undirected, and weighted.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Подумайте про дві властивості, які може мати ребро: напрямок і вага. Кожна породжує тип графа.' },
+        { strength: 50, text: 'Три варіанти є дійсними стандартними типами — шукайте терміни з підручників: орієнтований, неорієнтований, зважений.' },
+        { strength: 0, text: 'Правильні відповіді: орієнтований, неорієнтований і зважений.' },
       ],
     },
   });
@@ -416,14 +461,21 @@ async function main() {
       orderIndex: 3,
       taskType: 'OPEN_ANSWER',
       statement: 'Look at the graph shown. How many edges does it have?',
+      statementUk: 'Подивіться на показаний граф. Скільки в ньому ребер?',
       correctAnswer: '6',
       answerTolerance: 0,
       maxScore: 1,
       explanation: 'Count each line: A-B, A-D, B-C, B-E, C-D, D-E = 6 edges.',
+      explanationUk: 'Порахуйте кожну лінію: A-B, A-D, B-C, B-E, C-D, D-E = 6 ребер.',
       hints: [
         { strength: 100, text: 'Count every line segment connecting two vertices in the diagram.' },
         { strength: 50, text: 'There are more than 4 but fewer than 8 edges. Count systematically from each vertex.' },
         { strength: 0, text: 'The graph has exactly 6 edges.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: "Порахуйте кожен відрізок, що з'єднує дві вершини в діаграмі." },
+        { strength: 50, text: 'Тут більше 4, але менше 8 ребер. Рахуйте систематично від кожної вершини.' },
+        { strength: 0, text: 'Граф має рівно 6 ребер.' },
       ],
     },
   });
@@ -434,6 +486,7 @@ async function main() {
       courseId: course1.id,
       prerequisiteId: lesson1_1.id,
       title: 'Graph Traversal',
+      titleUk: 'Обхід графів',
       orderIndex: 2,
       isMandatory: true,
       estimatedMinutes: 30,
@@ -443,6 +496,12 @@ async function main() {
         { type: 'text', value: 'DFS (Depth-First Search) goes as deep as possible along each branch before backtracking. It uses a stack (or recursion).' },
         { type: 'latex', value: '\\text{BFS: queue (FIFO)} \\quad \\text{DFS: stack (LIFO)}' },
       ],
+      contentUk: [
+        { type: 'text', value: 'Обхід графа означає систематичне відвідування всіх вершин. Дві основні стратегії — це BFS та DFS.' },
+        { type: 'text', value: 'BFS (пошук в ширину) досліджує всіх сусідів на поточному рівні глибини, перш ніж заглибитися далі. Використовує чергу.' },
+        { type: 'text', value: 'DFS (пошук в глибину) йде якомога глибше вздовж кожної гілки перед поверненням. Використовує стек (або рекурсію).' },
+        { type: 'latex', value: '\\text{BFS: queue (FIFO)} \\quad \\text{DFS: stack (LIFO)}' },
+      ],
     },
   });
 
@@ -450,7 +509,9 @@ async function main() {
     data: {
       lessonId: lesson1_2.id,
       title: 'Traversal Algorithms Quiz',
+      titleUk: 'Тест: Алгоритми обходу',
       description: 'Check your understanding of BFS and DFS.',
+      descriptionUk: 'Перевірте своє розуміння BFS та DFS.',
       timeLimitMin: 15,
       maxAttempts: 3,
       passingScore: 60,
@@ -464,19 +525,32 @@ async function main() {
       orderIndex: 1,
       taskType: 'SINGLE_CHOICE',
       statement: 'Which traversal algorithm uses a queue as its primary data structure?',
+      statementUk: 'Який алгоритм обходу використовує чергу як основну структуру даних?',
       options: [
         { id: 'a', text: 'Depth-First Search (DFS)' },
         { id: 'b', text: 'Breadth-First Search (BFS)' },
         { id: 'c', text: 'Both BFS and DFS' },
         { id: 'd', text: 'Neither' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Пошук в глибину (DFS)' },
+        { id: 'b', text: 'Пошук в ширину (BFS)' },
+        { id: 'c', text: 'Обидва BFS та DFS' },
+        { id: 'd', text: 'Жоден' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: 'BFS uses a FIFO queue to process vertices level by level. DFS uses a LIFO stack (or recursion).',
+      explanationUk: 'BFS використовує FIFO-чергу для обробки вершин рівень за рівнем. DFS використовує LIFO-стек (або рекурсію).',
       hints: [
         { strength: 100, text: 'BFS explores neighbours layer by layer. What data structure processes items in the order they arrive (FIFO)?' },
         { strength: 50, text: 'A queue is first-in-first-out. Which traversal visits all neighbours before going deeper — that one uses a queue.' },
         { strength: 0, text: 'BFS uses a queue. DFS uses a stack.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'BFS досліджує сусідів шар за шаром. Яка структура даних обробляє елементи в порядку їх надходження (FIFO)?' },
+        { strength: 50, text: 'Черга — це «перший прийшов — перший пішов». Який обхід відвідує всіх сусідів перед заглибленням — той і використовує чергу.' },
+        { strength: 0, text: 'BFS використовує чергу. DFS використовує стек.' },
       ],
     },
   });
@@ -488,14 +562,21 @@ async function main() {
       orderIndex: 2,
       taskType: 'OPEN_ANSWER',
       statement: 'In the directed graph shown, what is the out-degree of vertex S (number of edges leaving S)?',
+      statementUk: 'У показаному орієнтованому графі який вихідний степінь вершини S (кількість ребер, що виходять із S)?',
       correctAnswer: '2',
       answerTolerance: 0,
       maxScore: 1,
       explanation: 'S has directed edges to A and B, so its out-degree is 2.',
+      explanationUk: 'S має орієнтовані ребра до A та B, тому її вихідний степінь дорівнює 2.',
       hints: [
         { strength: 100, text: 'Out-degree = number of arrows that start at S and point away from it.' },
         { strength: 50, text: 'S points to exactly 2 other vertices. Count the arrowheads leaving S.' },
         { strength: 0, text: 'S → A and S → B. Out-degree of S = 2.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Вихідний степінь = кількість стрілок, що починаються в S і вказують від неї.' },
+        { strength: 50, text: 'S вказує рівно на 2 інші вершини. Порахуйте вістря стрілок, що виходять із S.' },
+        { strength: 0, text: 'S → A і S → B. Вихідний степінь S = 2.' },
       ],
     },
   });
@@ -506,19 +587,32 @@ async function main() {
       orderIndex: 3,
       taskType: 'SINGLE_CHOICE',
       statement: 'A graph where there exists a path between every pair of vertices is called:',
+      statementUk: 'Граф, у якому існує шлях між кожною парою вершин, називається:',
       options: [
         { id: 'a', text: 'A complete graph' },
         { id: 'b', text: 'A connected graph' },
         { id: 'c', text: 'A planar graph' },
         { id: 'd', text: 'A bipartite graph' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Повний граф' },
+        { id: 'b', text: "Зв'язний граф" },
+        { id: 'c', text: 'Планарний граф' },
+        { id: 'd', text: 'Дводольний граф' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: 'A connected graph has a path between every pair of vertices. A complete graph is stricter — it requires a direct edge between every pair.',
+      explanationUk: "Зв'язний граф має шлях між кожною парою вершин. Повний граф є суворішим — він вимагає прямого ребра між кожною парою.",
       hints: [
         { strength: 100, text: 'The key property: you can reach any vertex from any other vertex via some sequence of edges.' },
         { strength: 50, text: 'The term literally describes what it means — the graph is "connected" throughout.' },
         { strength: 0, text: 'It is called a connected graph.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Ключова властивість: ви можете досягти будь-якої вершини з будь-якої іншої через певну послідовність ребер.' },
+        { strength: 50, text: "Термін буквально описує його суть — граф «зв'язаний» наскрізь." },
+        { strength: 0, text: "Це називається зв'язний граф." },
       ],
     },
   });
@@ -529,6 +623,7 @@ async function main() {
       courseId: course1.id,
       prerequisiteId: lesson1_2.id,
       title: 'Shortest Paths',
+      titleUk: 'Найкоротші шляхи',
       orderIndex: 3,
       isMandatory: false,
       estimatedMinutes: 40,
@@ -537,6 +632,11 @@ async function main() {
         { type: 'latex', value: 'd[v] = \\min_{u \\in \\text{visited}} \\bigl(d[u] + w(u,v)\\bigr)' },
         { type: 'text', value: 'At each step, pick the unvisited vertex with the smallest known distance and relax its neighbours.' },
       ],
+      contentUk: [
+        { type: 'text', value: 'Алгоритм Дейкстри знаходить найкоротший шлях від вихідної вершини до всіх інших у зваженому графі з невід’ємними вагами ребер.' },
+        { type: 'latex', value: 'd[v] = \\min_{u \\in \\text{visited}} \\bigl(d[u] + w(u,v)\\bigr)' },
+        { type: 'text', value: 'На кожному кроці виберіть невідвідану вершину з найменшою відомою відстанню та релаксуйте її сусідів.' },
+      ],
     },
   });
 
@@ -544,6 +644,7 @@ async function main() {
     data: {
       lessonId: lesson1_3.id,
       title: "Shortest Paths Quiz",
+      titleUk: 'Тест: Найкоротші шляхи',
       timeLimitMin: 20,
       maxAttempts: 3,
       passingScore: 60,
@@ -557,14 +658,21 @@ async function main() {
       orderIndex: 1,
       taskType: 'OPEN_ANSWER',
       statement: "Using the weighted graph shown, what is the shortest path distance from A to D?",
+      statementUk: 'У показаному зваженому графі яка довжина найкоротшого шляху від A до D?',
       correctAnswer: '7',
       answerTolerance: 0,
       maxScore: 2,
       explanation: 'Path A→B→D costs 4+3=7. Path A→C→D costs 2+5=7. Path A→B→C→D costs 4+1+5=10. Minimum is 7.',
+      explanationUk: 'Шлях A→B→D коштує 4+3=7. Шлях A→C→D коштує 2+5=7. Шлях A→B→C→D коштує 4+1+5=10. Мінімум — 7.',
       hints: [
         { strength: 100, text: 'List all paths from A to D and sum the edge weights for each. Pick the smallest total.' },
         { strength: 50, text: 'There are two equally short paths: A→B→D (cost 4+3) and A→C→D (cost 2+5). Both equal the same value.' },
         { strength: 0, text: 'The shortest distance is 7 (via A→B→D or A→C→D).' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Перерахуйте всі шляхи від A до D та підсумуйте ваги ребер для кожного. Виберіть найменшу суму.' },
+        { strength: 50, text: 'Є два однаково короткі шляхи: A→B→D (вартість 4+3) та A→C→D (вартість 2+5). Обидва дорівнюють однаковому значенню.' },
+        { strength: 0, text: 'Найкоротша відстань — 7 (через A→B→D або A→C→D).' },
       ],
     },
   });
@@ -575,19 +683,32 @@ async function main() {
       orderIndex: 2,
       taskType: 'SINGLE_CHOICE',
       statement: "Dijkstra's algorithm fails when the graph contains:",
+      statementUk: 'Алгоритм Дейкстри не працює, коли граф містить:',
       options: [
         { id: 'a', text: 'Undirected edges' },
         { id: 'b', text: 'Negative-weight edges' },
         { id: 'c', text: 'Disconnected components' },
         { id: 'd', text: 'Self-loops with weight 0' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Неорієнтовані ребра' },
+        { id: 'b', text: "Ребра з від'ємною вагою" },
+        { id: 'c', text: "Незв'язні компоненти" },
+        { id: 'd', text: 'Петлі з вагою 0' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: "Dijkstra's greedy relaxation assumes that once a vertex is finalised its distance cannot decrease — a negative edge can violate this. Use Bellman-Ford for graphs with negative weights.",
+      explanationUk: "Жадібна релаксація Дейкстри припускає, що після фіналізації відстань вершини не може зменшитися — від'ємне ребро може порушити це. Використовуйте Беллмана-Форда для графів з від'ємними вагами.",
       hints: [
         { strength: 100, text: "Dijkstra's makes a greedy assumption: a finalised distance won't get smaller. Which type of edge could break that assumption?" },
         { strength: 50, text: 'If an edge has negative weight, a later path could turn out shorter than one already finalised — causing incorrect results.' },
         { strength: 0, text: "Dijkstra's fails with negative-weight edges. Use Bellman-Ford instead." },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Алгоритм Дейкстри робить жадібне припущення: фіналізована відстань не зменшиться. Який тип ребра може порушити це припущення?' },
+        { strength: 50, text: "Якщо ребро має від'ємну вагу, пізніший шлях може виявитися коротшим за вже фіналізований — спричиняючи неправильні результати." },
+        { strength: 0, text: "Дейкстра не працює з від'ємними вагами ребер. Використовуйте Беллмана-Форда натомість." },
       ],
     },
   });
@@ -601,9 +722,13 @@ async function main() {
     data: {
       authorId: admin.id,
       title: 'Numerical Methods',
+      titleUk: 'Чисельні методи',
       description:
         'Explore root-finding, numerical integration, and interpolation methods used in scientific computing.',
+      descriptionUk:
+        'Дослідіть методи пошуку коренів, чисельного інтегрування та інтерполяції, що застосовуються в наукових обчисленнях.',
       discipline: 'Numerical Methods',
+      disciplineUk: 'Чисельні методи',
       difficulty: 'BEGINNER',
       status: 'PUBLISHED',
       isVisible: true,
@@ -615,6 +740,7 @@ async function main() {
     data: {
       courseId: course2.id,
       title: 'Root Finding Methods',
+      titleUk: 'Методи пошуку коренів',
       orderIndex: 1,
       isMandatory: true,
       estimatedMinutes: 25,
@@ -626,6 +752,14 @@ async function main() {
         { type: 'text', value: "Newton's method uses the derivative for quadratic convergence near the root." },
         { type: 'latex', value: 'x_{n+1} = x_n - \\frac{f(x_n)}{f\'(x_n)}' },
       ],
+      contentUk: [
+        { type: 'text', value: 'Алгоритми пошуку коренів знаходять x такі, що f(x) = 0.' },
+        { type: 'latex', value: 'f(x) = 0' },
+        { type: 'text', value: 'Метод бісекції ділить навпіл інтервал [a, b], де f(a) та f(b) мають протилежні знаки, що гарантовано теоремою про проміжне значення.' },
+        { type: 'latex', value: 'c = \\frac{a + b}{2}' },
+        { type: 'text', value: 'Метод Ньютона використовує похідну для квадратичної збіжності поблизу кореня.' },
+        { type: 'latex', value: 'x_{n+1} = x_n - \\frac{f(x_n)}{f\'(x_n)}' },
+      ],
     },
   });
 
@@ -633,7 +767,9 @@ async function main() {
     data: {
       lessonId: lesson2_1.id,
       title: 'Root Finding Quiz',
+      titleUk: 'Тест: Пошук коренів',
       description: "Test your knowledge of the bisection and Newton's methods.",
+      descriptionUk: 'Перевірте свої знання методів бісекції та Ньютона.',
       timeLimitMin: 15,
       maxAttempts: 3,
       passingScore: 60,
@@ -646,13 +782,20 @@ async function main() {
       orderIndex: 1,
       taskType: 'OPEN_ANSWER',
       statement: 'Applying one step of bisection to f(x) = x² − 2 on [1, 2], what is the midpoint c?',
+      statementUk: 'Застосовуючи один крок бісекції до f(x) = x² − 2 на [1, 2], яка середина c?',
       correctAnswer: '1.5',
       answerTolerance: 0.001,
       maxScore: 1,
       explanation: 'c = (a + b) / 2 = (1 + 2) / 2 = 1.5',
+      explanationUk: 'c = (a + b) / 2 = (1 + 2) / 2 = 1.5',
       hints: [
         { strength: 100, text: 'Use c = (a + b) / 2 with a = 1, b = 2.' },
         { strength: 50, text: 'The midpoint of [1, 2] is just the average of the two endpoints.' },
+        { strength: 0, text: '(1 + 2) / 2 = 1.5' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Використовуйте c = (a + b) / 2 з a = 1, b = 2.' },
+        { strength: 50, text: 'Середина інтервалу [1, 2] — це просто середнє арифметичне двох кінцевих точок.' },
         { strength: 0, text: '(1 + 2) / 2 = 1.5' },
       ],
     },
@@ -664,19 +807,32 @@ async function main() {
       orderIndex: 2,
       taskType: 'SINGLE_CHOICE',
       statement: "What is the main convergence advantage of Newton's method over bisection?",
+      statementUk: 'Яка основна перевага збіжності методу Ньютона над методом бісекції?',
       options: [
         { id: 'a', text: 'It always converges regardless of initial guess' },
         { id: 'b', text: 'It converges quadratically near the root' },
         { id: 'c', text: 'It does not require computing any derivatives' },
         { id: 'd', text: 'It works on intervals without sign change' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Він завжди збігається незалежно від початкового наближення' },
+        { id: 'b', text: 'Він збігається квадратично поблизу кореня' },
+        { id: 'c', text: 'Він не потребує обчислення похідних' },
+        { id: 'd', text: 'Він працює на інтервалах без зміни знака' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: "Newton's method doubles the number of correct significant digits each iteration (quadratic convergence). Bisection only gains one bit per iteration (linear convergence).",
+      explanationUk: 'Метод Ньютона подвоює кількість правильних значущих цифр на кожній ітерації (квадратична збіжність). Бісекція додає лише один біт за ітерацію (лінійна збіжність).',
       hints: [
         { strength: 100, text: "How does the error shrink each iteration in Newton's method — linearly or as its square?" },
         { strength: 50, text: "Newton's method uses the derivative, giving it much faster convergence described as 'quadratic'." },
         { strength: 0, text: "Newton's method has quadratic convergence — correct digits roughly double each step." },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Як зменшується похибка на кожній ітерації методу Ньютона — лінійно чи як її квадрат?' },
+        { strength: 50, text: 'Метод Ньютона використовує похідну, що забезпечує набагато швидшу збіжність, описану як «квадратична».' },
+        { strength: 0, text: 'Метод Ньютона має квадратичну збіжність — правильні цифри приблизно подвоюються на кожному кроці.' },
       ],
     },
   });
@@ -687,19 +843,32 @@ async function main() {
       orderIndex: 3,
       taskType: 'SINGLE_CHOICE',
       statement: 'For the Bisection Method to be applicable on [a, b], which condition is required?',
+      statementUk: 'Щоб метод бісекції був застосовним на [a, b], яка умова є необхідною?',
       options: [
         { id: 'a', text: 'f(a) = f(b)' },
         { id: 'b', text: 'f(a) · f(b) < 0' },
         { id: 'c', text: 'f(a) · f(b) > 0' },
         { id: 'd', text: 'f is differentiable on [a, b]' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'f(a) = f(b)' },
+        { id: 'b', text: 'f(a) · f(b) < 0' },
+        { id: 'c', text: 'f(a) · f(b) > 0' },
+        { id: 'd', text: 'f диференційовна на [a, b]' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: 'f(a) and f(b) must have opposite signs (f(a)·f(b) < 0). By the Intermediate Value Theorem, a continuous function that changes sign must cross zero somewhere in the interval.',
+      explanationUk: 'f(a) та f(b) повинні мати протилежні знаки (f(a)·f(b) < 0). За теоремою про проміжне значення неперервна функція, що змінює знак, повинна десь у інтервалі перетнути нуль.',
       hints: [
         { strength: 100, text: 'For a root to lie between a and b, f must cross zero — what must the signs of f(a) and f(b) be?' },
         { strength: 50, text: 'The IVT guarantees a root when f changes sign. Opposite signs means one is positive and one negative.' },
         { strength: 0, text: 'f(a) · f(b) < 0 — the function values at the endpoints must have opposite signs.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Щоб корінь лежав між a та b, f повинна перетнути нуль — якими повинні бути знаки f(a) та f(b)?' },
+        { strength: 50, text: 'Теорема про проміжне значення гарантує корінь, коли f змінює знак. Протилежні знаки означають один додатний і один від’ємний.' },
+        { strength: 0, text: 'f(a) · f(b) < 0 — значення функції в кінцевих точках повинні мати протилежні знаки.' },
       ],
     },
   });
@@ -709,6 +878,7 @@ async function main() {
       courseId: course2.id,
       prerequisiteId: lesson2_1.id,
       title: 'Numerical Integration',
+      titleUk: 'Чисельне інтегрування',
       orderIndex: 2,
       isMandatory: true,
       estimatedMinutes: 30,
@@ -717,6 +887,11 @@ async function main() {
         { type: 'latex', value: '\\int_a^b f(x)\\,dx \\approx \\frac{h}{2}\\bigl[f(a) + 2\\textstyle\\sum_{i=1}^{n-1}f(x_i) + f(b)\\bigr]' },
         { type: 'text', value: "The Trapezoid Rule approximates the integrand with straight lines (O(h²) error). Simpson's Rule uses quadratics (O(h⁴) error)." },
       ],
+      contentUk: [
+        { type: 'text', value: 'Чисельне інтегрування наближено обчислює визначений інтеграл, коли аналітичний розв’язок є непрактичним.' },
+        { type: 'latex', value: '\\int_a^b f(x)\\,dx \\approx \\frac{h}{2}\\bigl[f(a) + 2\\textstyle\\sum_{i=1}^{n-1}f(x_i) + f(b)\\bigr]' },
+        { type: 'text', value: 'Метод трапецій наближує підінтегральну функцію прямими лініями (похибка O(h²)). Метод Сімпсона використовує квадратичні функції (похибка O(h⁴)).' },
+      ],
     },
   });
 
@@ -724,6 +899,7 @@ async function main() {
     data: {
       lessonId: lesson2_2.id,
       title: 'Numerical Integration Quiz',
+      titleUk: 'Тест: Чисельне інтегрування',
       timeLimitMin: 15,
       maxAttempts: 3,
       passingScore: 60,
@@ -736,13 +912,20 @@ async function main() {
       orderIndex: 1,
       taskType: 'OPEN_ANSWER',
       statement: 'Apply the Trapezoid Rule with n = 1 to f(x) = x² on [0, 2]. What is the result?',
+      statementUk: 'Застосуйте метод трапецій з n = 1 до f(x) = x² на [0, 2]. Який результат?',
       correctAnswer: '4',
       answerTolerance: 0.01,
       maxScore: 2,
       explanation: 'h = 2 − 0 = 2. Result = (h/2)[f(0) + f(2)] = (2/2)[0 + 4] = 4. (The exact integral is 8/3 ≈ 2.667, so one trapezoid is a rough estimate.)',
+      explanationUk: 'h = 2 − 0 = 2. Результат = (h/2)[f(0) + f(2)] = (2/2)[0 + 4] = 4. (Точний інтеграл — 8/3 ≈ 2.667, тож одна трапеція — це грубе наближення.)',
       hints: [
         { strength: 100, text: 'Trapezoid rule with n=1: result = (h/2)[f(a) + f(b)]. Here h = b − a = 2, f(0) = 0, f(2) = 4.' },
         { strength: 50, text: 'h = 2, so (2/2) = 1. Multiply by [f(0) + f(2)] = [0 + 4].' },
+        { strength: 0, text: '1 × (0 + 4) = 4.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Метод трапецій з n=1: результат = (h/2)[f(a) + f(b)]. Тут h = b − a = 2, f(0) = 0, f(2) = 4.' },
+        { strength: 50, text: 'h = 2, тож (2/2) = 1. Помножте на [f(0) + f(2)] = [0 + 4].' },
         { strength: 0, text: '1 × (0 + 4) = 4.' },
       ],
     },
@@ -754,19 +937,32 @@ async function main() {
       orderIndex: 2,
       taskType: 'SINGLE_CHOICE',
       statement: 'Which integration rule generally achieves higher accuracy for the same number of sub-intervals?',
+      statementUk: 'Яке правило інтегрування зазвичай досягає більшої точності за однакової кількості підінтервалів?',
       options: [
         { id: 'a', text: 'Left Riemann Sum' },
         { id: 'b', text: 'Right Riemann Sum' },
         { id: 'c', text: 'Trapezoid Rule' },
         { id: 'd', text: "Simpson's Rule" },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Ліва сума Рімана' },
+        { id: 'b', text: 'Права сума Рімана' },
+        { id: 'c', text: 'Метод трапецій' },
+        { id: 'd', text: 'Метод Сімпсона' },
+      ],
       correctAnswer: 'd',
       maxScore: 1,
       explanation: "Simpson's Rule fits a parabola through three points per sub-interval, achieving O(h⁴) error vs O(h²) for the Trapezoid Rule.",
+      explanationUk: 'Метод Сімпсона будує параболу через три точки на підінтервал, досягаючи похибки O(h⁴) проти O(h²) для методу трапецій.',
       hints: [
         { strength: 100, text: "Compare error orders: O(h²) vs O(h⁴). Which rule uses parabolas instead of straight lines?" },
         { strength: 50, text: "Simpson's Rule requires an even number of sub-intervals and uses quadratic polynomials — this gives it much lower error." },
         { strength: 0, text: "Simpson's Rule has O(h⁴) accuracy, superior to the Trapezoid Rule's O(h²)." },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Порівняйте порядки похибки: O(h²) проти O(h⁴). Яке правило використовує параболи замість прямих ліній?' },
+        { strength: 50, text: 'Метод Сімпсона вимагає парної кількості підінтервалів і використовує квадратичні поліноми — це дає йому набагато меншу похибку.' },
+        { strength: 0, text: 'Метод Сімпсона має точність O(h⁴), що перевершує O(h²) методу трапецій.' },
       ],
     },
   });
@@ -780,9 +976,13 @@ async function main() {
     data: {
       authorId: admin.id,
       title: 'Optimization Methods',
+      titleUk: 'Методи оптимізації',
       description:
         'Understand linear programming, the simplex method, and gradient-based optimization techniques.',
+      descriptionUk:
+        'Зрозумійте лінійне програмування, симплекс-метод та методи оптимізації на основі градієнта.',
       discipline: 'Optimization',
+      disciplineUk: 'Оптимізація',
       difficulty: 'INTERMEDIATE',
       status: 'PUBLISHED',
       isVisible: true,
@@ -794,6 +994,7 @@ async function main() {
     data: {
       courseId: course3.id,
       title: 'Introduction to Linear Programming',
+      titleUk: 'Вступ до лінійного програмування',
       orderIndex: 1,
       isMandatory: true,
       estimatedMinutes: 35,
@@ -802,6 +1003,11 @@ async function main() {
         { type: 'latex', value: '\\max \\; c^\\top x \\quad \\text{s.t.} \\quad Ax \\leq b,\\; x \\geq 0' },
         { type: 'text', value: 'The feasible region is a convex polytope. If an optimal solution exists, it occurs at one of its vertices (corner points).' },
       ],
+      contentUk: [
+        { type: 'text', value: 'Лінійне програмування (ЛП) оптимізує лінійну цільову функцію за системи лінійних обмежень-нерівностей.' },
+        { type: 'latex', value: '\\max \\; c^\\top x \\quad \\text{s.t.} \\quad Ax \\leq b,\\; x \\geq 0' },
+        { type: 'text', value: 'Область допустимих розв’язків є опуклим багатогранником. Якщо існує оптимальний розв’язок, він знаходиться в одній з його вершин (кутових точок).' },
+      ],
     },
   });
 
@@ -809,6 +1015,7 @@ async function main() {
     data: {
       lessonId: lesson3_1.id,
       title: 'Linear Programming Basics',
+      titleUk: 'Основи лінійного програмування',
       timeLimitMin: 20,
       maxAttempts: 3,
       passingScore: 60,
@@ -821,19 +1028,32 @@ async function main() {
       orderIndex: 1,
       taskType: 'SINGLE_CHOICE',
       statement: 'In a linear program, what is the objective function?',
+      statementUk: 'У задачі лінійного програмування що таке цільова функція?',
       options: [
         { id: 'a', text: 'A set of inequalities limiting the decision variables' },
         { id: 'b', text: 'The linear function being maximized or minimized' },
         { id: 'c', text: 'The set of all feasible solutions' },
         { id: 'd', text: 'A non-linear function of the decision variables' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Набір нерівностей, що обмежують змінні розв’язку' },
+        { id: 'b', text: 'Лінійна функція, яку максимізують або мінімізують' },
+        { id: 'c', text: 'Множина всіх допустимих розв’язків' },
+        { id: 'd', text: 'Нелінійна функція змінних розв’язку' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: 'The objective function is the linear expression you want to optimize (e.g. maximise profit). The constraints define the feasible region.',
+      explanationUk: 'Цільова функція — це лінійний вираз, який ви хочете оптимізувати (наприклад, максимізувати прибуток). Обмеження визначають область допустимих розв’язків.',
       hints: [
         { strength: 100, text: "In an optimization problem there's a 'goal' — a function you want to make as large (or small) as possible. What is that called?" },
         { strength: 50, text: "It's not the constraints. It's the function you're actually optimizing — the 'object' of the optimization." },
         { strength: 0, text: 'The objective function is the linear function being maximized or minimized.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'У задачі оптимізації є «мета» — функція, яку ви хочете зробити якомога більшою (або меншою). Як це називається?' },
+        { strength: 50, text: 'Це не обмеження. Це функція, яку ви фактично оптимізуєте — «об’єкт» оптимізації.' },
+        { strength: 0, text: 'Цільова функція — це лінійна функція, яку максимізують або мінімізують.' },
       ],
     },
   });
@@ -844,19 +1064,32 @@ async function main() {
       orderIndex: 2,
       taskType: 'MULTIPLE_CHOICE',
       statement: 'Which statements about the feasible region of an LP are correct? (Select all that apply)',
+      statementUk: 'Які твердження про область допустимих розв’язків ЛП є правильними? (Виберіть усе, що підходить)',
       options: [
         { id: 'a', text: 'It is always a convex set' },
         { id: 'b', text: 'It can be empty (infeasible LP)' },
         { id: 'c', text: 'It is always bounded' },
         { id: 'd', text: 'If an optimum exists, it lies at a vertex' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Це завжди опукла множина' },
+        { id: 'b', text: 'Вона може бути порожньою (несумісне ЛП)' },
+        { id: 'c', text: 'Вона завжди обмежена' },
+        { id: 'd', text: 'Якщо оптимум існує, він лежить у вершині' },
+      ],
       correctAnswer: JSON.stringify(['a', 'b', 'd']),
       maxScore: 2,
       explanation: 'The feasible region is always convex (intersection of half-planes). It may be empty (no solution) or unbounded. When an optimum exists, it occurs at a vertex.',
+      explanationUk: 'Область допустимих розв’язків завжди опукла (перетин півплощин). Вона може бути порожньою (без розв’язку) або необмеженою. Коли оптимум існує, він знаходиться у вершині.',
       hints: [
         { strength: 100, text: 'The feasible region is the intersection of linear half-planes. Is that always convex? Always bounded? Can it be empty?' },
         { strength: 50, text: 'Three of the four are correct. Convex: yes (intersection of half-planes). Empty: yes (contradictory constraints). Always bounded: no. Vertex optimum: yes.' },
         { strength: 0, text: 'Correct: convex, can be empty, optimum at vertex. Incorrect: it is NOT always bounded.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Область допустимих розв’язків — це перетин лінійних півплощин. Чи завжди вона опукла? Завжди обмежена? Чи може вона бути порожньою?' },
+        { strength: 50, text: 'Три з чотирьох правильні. Опукла: так. Порожня: так (суперечливі обмеження). Завжди обмежена: ні. Оптимум у вершині: так.' },
+        { strength: 0, text: 'Правильні: опукла, може бути порожньою, оптимум у вершині. Неправильно: вона НЕ завжди обмежена.' },
       ],
     },
   });
@@ -867,14 +1100,21 @@ async function main() {
       orderIndex: 3,
       taskType: 'OPEN_ANSWER',
       statement: 'Maximise z = 3x + 2y subject to x + y ≤ 4, x ≥ 0, y ≥ 0. What is the maximum value of z?',
+      statementUk: 'Максимізуйте z = 3x + 2y за умов x + y ≤ 4, x ≥ 0, y ≥ 0. Яке максимальне значення z?',
       correctAnswer: '12',
       answerTolerance: 0,
       maxScore: 2,
       explanation: 'Corner points: (0,0)→z=0, (4,0)→z=12, (0,4)→z=8. Maximum is z = 12 at (4, 0).',
+      explanationUk: 'Кутові точки: (0,0)→z=0, (4,0)→z=12, (0,4)→z=8. Максимум — z = 12 у точці (4, 0).',
       hints: [
         { strength: 100, text: 'Identify the corner points of the feasible region, then evaluate z = 3x + 2y at each one.' },
         { strength: 50, text: 'The vertices are (0,0), (4,0), and (0,4). Which gives the largest value of 3x + 2y?' },
         { strength: 0, text: 'z(4, 0) = 3×4 + 2×0 = 12 is the maximum.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Визначте кутові точки області допустимих розв’язків, потім обчисліть z = 3x + 2y у кожній з них.' },
+        { strength: 50, text: 'Вершини: (0,0), (4,0) та (0,4). Яка дає найбільше значення 3x + 2y?' },
+        { strength: 0, text: 'z(4, 0) = 3×4 + 2×0 = 12 — це максимум.' },
       ],
     },
   });
@@ -884,6 +1124,7 @@ async function main() {
       courseId: course3.id,
       prerequisiteId: lesson3_1.id,
       title: 'Gradient Descent',
+      titleUk: 'Градієнтний спуск',
       orderIndex: 2,
       isMandatory: false,
       estimatedMinutes: 30,
@@ -892,6 +1133,11 @@ async function main() {
         { type: 'latex', value: 'x_{n+1} = x_n - \\alpha \\nabla f(x_n)' },
         { type: 'text', value: 'The learning rate α controls the step size. Too large: diverges. Too small: slow convergence.' },
       ],
+      contentUk: [
+        { type: 'text', value: 'Градієнтний спуск мінімізує диференційовну функцію, ітеративно роблячи кроки в напрямку найшвидшого спадання.' },
+        { type: 'latex', value: 'x_{n+1} = x_n - \\alpha \\nabla f(x_n)' },
+        { type: 'text', value: 'Швидкість навчання α контролює розмір кроку. Завелика — розбіжність. Замала — повільна збіжність.' },
+      ],
     },
   });
 
@@ -899,6 +1145,7 @@ async function main() {
     data: {
       lessonId: lesson3_2.id,
       title: 'Gradient Descent Quiz',
+      titleUk: 'Тест: Градієнтний спуск',
       timeLimitMin: 15,
       maxAttempts: 3,
       passingScore: 60,
@@ -911,19 +1158,32 @@ async function main() {
       orderIndex: 1,
       taskType: 'SINGLE_CHOICE',
       statement: 'In gradient descent, what does the learning rate α control?',
+      statementUk: 'У градієнтному спуску що контролює швидкість навчання α?',
       options: [
         { id: 'a', text: 'The direction of each update step' },
         { id: 'b', text: 'The size of each update step' },
         { id: 'c', text: 'The number of iterations' },
         { id: 'd', text: 'The value of the function at the minimum' },
       ],
+      optionsUk: [
+        { id: 'a', text: 'Напрямок кожного кроку оновлення' },
+        { id: 'b', text: 'Розмір кожного кроку оновлення' },
+        { id: 'c', text: 'Кількість ітерацій' },
+        { id: 'd', text: 'Значення функції в мінімумі' },
+      ],
       correctAnswer: 'b',
       maxScore: 1,
       explanation: 'α scales the gradient to determine how far to move each step. The gradient provides the direction; α provides the magnitude.',
+      explanationUk: 'α масштабує градієнт, визначаючи, наскільки далеко рухатися на кожному кроці. Градієнт дає напрямок; α — величину.',
       hints: [
         { strength: 100, text: 'Look at the update rule: x = x − α∇f(x). α is multiplied by the gradient — what does multiplying change?' },
         { strength: 50, text: 'The gradient gives direction. α is a scalar multiplier — it scales the magnitude of the step.' },
         { strength: 0, text: 'α controls the step size (magnitude) of each update.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: 'Подивіться на правило оновлення: x = x − α∇f(x). α множиться на градієнт — що змінює множення?' },
+        { strength: 50, text: 'Градієнт дає напрямок. α — це скалярний множник, який масштабує величину кроку.' },
+        { strength: 0, text: 'α контролює розмір (величину) кожного оновлення.' },
       ],
     },
   });
@@ -934,13 +1194,20 @@ async function main() {
       orderIndex: 2,
       taskType: 'OPEN_ANSWER',
       statement: 'Starting at x = 4, apply one step of gradient descent to f(x) = x² with α = 0.1. What is the new x?',
+      statementUk: 'Починаючи з x = 4, застосуйте один крок градієнтного спуску до f(x) = x² з α = 0.1. Яке нове x?',
       correctAnswer: '3.2',
       answerTolerance: 0.001,
       maxScore: 2,
       explanation: "f'(x) = 2x = 8 at x=4. New x = 4 − 0.1 × 8 = 4 − 0.8 = 3.2.",
+      explanationUk: "f'(x) = 2x = 8 при x=4. Нове x = 4 − 0.1 × 8 = 4 − 0.8 = 3.2.",
       hints: [
         { strength: 100, text: "Compute f'(x) = 2x at x = 4, then apply: x_new = x − α × f'(x)." },
         { strength: 50, text: "f'(4) = 2×4 = 8. x_new = 4 − 0.1 × 8." },
+        { strength: 0, text: '4 − 0.1 × 8 = 4 − 0.8 = 3.2.' },
+      ],
+      hintsUk: [
+        { strength: 100, text: "Обчисліть f'(x) = 2x при x = 4, потім застосуйте: x_нове = x − α × f'(x)." },
+        { strength: 50, text: "f'(4) = 2×4 = 8. x_нове = 4 − 0.1 × 8." },
         { strength: 0, text: '4 − 0.1 × 8 = 4 − 0.8 = 3.2.' },
       ],
     },
@@ -1096,7 +1363,9 @@ async function main() {
       userId: alice.id,
       code: 'FIRST_PASS',
       name: 'First Step',
+      nameUk: 'Перший крок',
       description: 'Passed your first test.',
+      descriptionUk: 'Пройдено перший тест.',
       category: 'PROGRESS',
       pointsAwarded: 10,
       iconUrl: imgAchFirst,
@@ -1107,7 +1376,9 @@ async function main() {
       userId: alice.id,
       code: 'PERFECT_SCORE',
       name: 'Perfectionist',
+      nameUk: 'Перфекціоніст',
       description: 'Scored 100% on a test.',
+      descriptionUk: 'Набрано 100% за тест.',
       category: 'SKILL',
       pointsAwarded: 25,
       iconUrl: imgAchPerfect,
@@ -1118,7 +1389,9 @@ async function main() {
       userId: alice.id,
       code: 'COMEBACK',
       name: 'Comeback',
+      nameUk: 'Повернення',
       description: 'Failed a test then passed it on a later attempt.',
+      descriptionUk: 'Провалили тест, але пройшли його з наступної спроби.',
       category: 'STREAK',
       pointsAwarded: 15,
       iconUrl: imgAchComeback,
@@ -1126,6 +1399,13 @@ async function main() {
   });
 
   console.log('✔  Achievements created');
+
+  try {
+    await invalidateCoursesCache();
+    console.log('✔  Course cache invalidated');
+  } catch {
+    console.log('⚠  Redis unavailable — cache not invalidated (flush manually if needed)');
+  }
 
   console.log('\n✅  Seed complete.\n');
   console.log('  Role     Email                       Password');

@@ -1,4 +1,8 @@
 {
+  "nav": {
+    "courses": "Courses",
+    "faq": "FAQ"
+  },
   "common": {
     "appName": "Progenesis",
     "signIn": "Sign in",
@@ -79,11 +83,177 @@
       "quoteAuthor": "William Paul Thurston"
     },
     "emailVerification": {
-      "banner": "Please verify your email address. Check your inbox for a verification link."
+      "banner": "Please verify your email address. Check your inbox for a verification link.",
+      "verifying": "Verifying your email…",
+      "successTitle": "Email verified!",
+      "successDescription": "Your email address has been confirmed. You can now access your account.",
+      "goToProfile": "Go to Profile",
+      "errorTitle": "Verification failed",
+      "errorDescription": "This verification link is invalid or has expired. Please request a new one.",
+      "missingToken": "No verification token found in the link.",
+      "backToLogin": "Back to login"
     }
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back, {name}"
+  },
+  "courses": {
+    "title": "Courses",
+    "subtitle": "Explore our interactive mathematics courses",
+    "empty": "No courses available yet.",
+    "by": "by {author}",
+    "lessons": "{count} lessons",
+    "enroll": "Start learning",
+    "enrolling": "Starting…",
+    "continueLearning": "Continue learning",
+    "courseCompleted": "Course completed",
+    "enrolledOn": "Enrolled · {percent}% complete",
+    "leaveCourse": "Leave course",
+    "leaveCourseConfirm": "Remove your progress for this course? This cannot be undone.",
+    "lessonsTitle": "Lessons",
+    "difficulty": {
+      "BEGINNER": "Beginner",
+      "INTERMEDIATE": "Intermediate",
+      "ADVANCED": "Advanced"
+    }
+  },
+  "test": {
+    "question": "Question {n}",
+    "submit": "Submit answers",
+    "submitting": "Submitting…",
+    "timeLeft": "Time left",
+    "passed": "Passed",
+    "failed": "Failed",
+    "score": "{score} / {max}",
+    "percent": "{pct}%",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "explanation": "Explanation",
+    "openPlaceholder": "Type your answer…",
+    "allRequired": "Please answer all questions before submitting.",
+    "tryAgain": "Try again",
+    "backToLesson": "Back to lesson",
+    "timedOut": "Time is up — your answers have been submitted.",
+    "alreadyPassed": "You already passed this test.",
+    "alreadyPassedNotice": "You've already passed this test — retakes aren't allowed.",
+    "viewResult": "View result",
+    "yourBestResult": "Your result",
+    "passedOn": "Passed on {date}",
+    "noRetakes": "Retakes not allowed",
+    "loadingResult": "Loading your result…"
+  },
+  "lesson": {
+    "theory": "Theory",
+    "tests": "Tests",
+    "optional": "Optional",
+    "mandatory": "Mandatory",
+    "noTests": "No tests available for this lesson.",
+    "tasks": "{count} tasks",
+    "timeLimit": "{min} min limit",
+    "noTimeLimit": "No time limit",
+    "passing": "{score}% to pass",
+    "startTest": "Start test",
+    "attempts": "{max} attempts",
+    "unlimitedAttempts": "Unlimited attempts",
+    "locked": "Locked",
+    "lockedHint": "Pass all tests in lesson {n} to unlock.",
+    "lockedTitle": "This lesson is locked",
+    "lockedDescription": "You must pass every test in the previous mandatory lesson before you can access this one.",
+    "goToBlocking": "Open the lesson you need to finish",
+    "lockedTestNotice": "You can take this test once the lesson is unlocked.",
+    "progressPassed": "{passed}/{total} tests passed",
+    "allPassed": "All tests passed",
+    "completed": "Completed"
+  },
+  "faq": {
+    "title": "FAQ",
+    "subtitle": "Frequently asked questions about Progenesis"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your account information",
+    "fullName": "Full name",
+    "email": "Email",
+    "role": "Role",
+    "memberSince": "Member since",
+    "emailVerified": "Email verified",
+    "emailUnverified": "Email not verified",
+    "editName": "Edit",
+    "saveName": "Save",
+    "cancel": "Cancel",
+    "savingName": "Saving…",
+    "changeAvatar": "Change photo",
+    "uploadingAvatar": "Uploading…",
+    "avatarError": "Failed to upload photo",
+    "nameError": "Failed to save name",
+    "stats": {
+      "courses": "Courses enrolled",
+      "tests": "Tests completed",
+      "achievements": "Achievements"
+    },
+    "tabs": {
+      "personal": "Personal",
+      "progress": "Progress",
+      "achievements": "Achievements"
+    },
+    "personal": {
+      "accountSection": "Account information",
+      "securitySection": "Security & email",
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password",
+      "passwordChanged": "Password changed successfully.",
+      "passwordsDontMatch": "Passwords do not match.",
+      "submitChangePassword": "Update password",
+      "submittingPassword": "Updating…",
+      "changeEmail": "Change email",
+      "newEmail": "New email address",
+      "emailChanged": "Email updated. Check the new inbox to verify it.",
+      "submitChangeEmail": "Update email",
+      "submittingEmail": "Updating…",
+      "verifyEmail": "Verify your email",
+      "verifyEmailDescription": "Didn't receive the verification link or it expired? We can send you a new one.",
+      "sendVerification": "Send verification email",
+      "verificationSent": "Verification email sent. Please check your inbox.",
+      "alreadyVerified": "Your email is already verified.",
+      "forgotPassword": "Forgot password",
+      "forgotPasswordDescription": "Send a password-reset link to your current email address.",
+      "sendResetLink": "Send reset link",
+      "resetLinkSent": "Reset link sent. Check your inbox.",
+      "sending": "Sending…"
+    },
+    "progress": {
+      "title": "Course progress",
+      "subtitle": "Your progress across all courses",
+      "empty": "No published courses yet.",
+      "lessons": "Lessons",
+      "tests": "Tests",
+      "lessonsProgress": "{done}/{total} completed",
+      "testsProgress": "{done}/{total} passed",
+      "notStarted": "Not started",
+      "notEnrolled": "Not enrolled",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "browseCourse": "Browse course",
+      "continue": "Continue"
+    },
+    "achievements": {
+      "title": "Achievements",
+      "subtitle": "Hover a badge to see how to earn it",
+      "earned": "Earned",
+      "locked": "Not yet earned",
+      "earnedOn": "Earned {date}",
+      "category": "Category",
+      "points": "{n} pts",
+      "howTo": "How to earn",
+      "categoryLabel": {
+        "PROGRESS": "Progress",
+        "SKILL": "Skill",
+        "STREAK": "Streak",
+        "SOCIAL": "Social"
+      }
+    }
   }
 }

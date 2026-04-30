@@ -62,6 +62,9 @@ export async function login(data: {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      isEmailVerified: user.isEmailVerified,
+      avatarUrl: user.avatarUrl ?? undefined,
+      preferences: user.preferences as Record<string, unknown>,
     },
     token,
   };

@@ -8,7 +8,9 @@ import { AchievementCategory } from 'generated/prisma';
 interface AchievementDefinition {
   code: string;
   name: string;
+  nameUk: string;
   description: string;
+  descriptionUk: string;
   category: AchievementCategory;
   iconUrl?: string;
   pointsAwarded: number;
@@ -30,7 +32,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'FIRST_SUBMISSION',
     name: 'First Step',
+    nameUk: 'Перший крок',
     description: 'Submitted your first test.',
+    descriptionUk: 'Надіслано перший тест.',
     category: 'PROGRESS',
     pointsAwarded: 10,
     check: async (_userId, ctx) => ctx.totalSubmissions === 1,
@@ -38,7 +42,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'FIRST_PASS',
     name: 'Passed!',
+    nameUk: 'Пройдено!',
     description: 'Passed a test for the first time.',
+    descriptionUk: 'Вперше пройдено тест.',
     category: 'PROGRESS',
     pointsAwarded: 20,
     check: async (_userId, ctx) =>
@@ -47,7 +53,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'PERFECT_SCORE',
     name: 'Perfect Score',
+    nameUk: 'Ідеальний результат',
     description: 'Achieved 100% on a test.',
+    descriptionUk: 'Отримано 100% за тест.',
     category: 'SKILL',
     pointsAwarded: 50,
     check: async (_userId, ctx) => ctx.submission.percentScore === 100,
@@ -55,7 +63,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'PERSISTENT',
     name: 'Persistent',
+    nameUk: 'Наполегливий',
     description: 'Submitted the same test 3 or more times.',
+    descriptionUk: 'Надіслано один тест 3 або більше разів.',
     category: 'STREAK',
     pointsAwarded: 15,
     check: async (_userId, ctx) => ctx.submission.attemptNumber >= 3,
@@ -63,7 +73,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'ANSWER_STREAK_10',
     name: 'On a Roll',
+    nameUk: 'У потоці',
     description: 'Answered 10 tasks correctly in total.',
+    descriptionUk: 'Правильно відповіли на 10 завдань загалом.',
     category: 'STREAK',
     pointsAwarded: 30,
     check: async (_userId, ctx) => ctx.totalCorrectTaskAnswers >= 10,
@@ -71,7 +83,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'ANSWER_STREAK_50',
     name: 'Knowledge Machine',
+    nameUk: 'Машина знань',
     description: 'Answered 50 tasks correctly in total.',
+    descriptionUk: 'Правильно відповіли на 50 завдань загалом.',
     category: 'STREAK',
     pointsAwarded: 100,
     check: async (_userId, ctx) => ctx.totalCorrectTaskAnswers >= 50,
@@ -79,7 +93,9 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     code: 'SUBMISSIONS_5',
     name: 'Regular',
+    nameUk: 'Постійний учасник',
     description: 'Submitted 5 tests.',
+    descriptionUk: 'Надіслано 5 тестів.',
     category: 'PROGRESS',
     pointsAwarded: 25,
     check: async (_userId, ctx) => ctx.totalSubmissions >= 5,
@@ -146,7 +162,9 @@ export async function checkAndAwardAchievements(
           userId,
           code: def.code,
           name: def.name,
+          nameUk: def.nameUk,
           description: def.description,
+          descriptionUk: def.descriptionUk,
           category: def.category,
           iconUrl: def.iconUrl ?? null,
           pointsAwarded: def.pointsAwarded,
@@ -157,6 +175,21 @@ export async function checkAndAwardAchievements(
   }
 
   return awarded;
+}
+
+// ── Public list of all achievement definitions ────────────────
+// Used by the profile page to show locked vs. earned badges.
+export function getAchievementDefinitions() {
+  return ACHIEVEMENTS.map((a) => ({
+    code: a.code,
+    name: a.name,
+    nameUk: a.nameUk,
+    description: a.description,
+    descriptionUk: a.descriptionUk,
+    category: a.category,
+    pointsAwarded: a.pointsAwarded,
+    iconUrl: a.iconUrl ?? null,
+  }));
 }
 
 // ── Manual queries ────────────────────────────────────────────
@@ -171,7 +204,9 @@ export function awardAchievement(data: {
   userId: string;
   code: string;
   name: string;
+  nameUk?: string;
   description: string;
+  descriptionUk?: string;
   category: AchievementCategory;
   iconUrl?: string;
   pointsAwarded?: number;

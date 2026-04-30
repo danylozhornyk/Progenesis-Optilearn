@@ -61,6 +61,51 @@ export async function verifyEmail(token: string) {
 }
 
 // ═════════════════════════════════════════════════════════════
+// EMAIL CHANGE (authenticated)
+// ═════════════════════════════════════════════════════════════
+
+export async function changeEmail(userId: string, newEmail: string) {
+  const trimmed = newEmail.trim().toLowerCase();
+  if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    throw new Error('Invalid email address');
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { email: trimmed },
+    select: { id: true },
+  });
+  if (existing && existing.id !== userId) {
+    throw new Error('This email is already in use');
+  }
+
+  const current = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, fullName: true },
+  });
+  if (!current) throw new Error('User not found');
+  if (current.email === trimmed) {
+    throw new Error('New email is the same as the current email');
+  }
+
+  // Update email and mark as unverified; clear any pending verification tokens
+  await prisma.$transaction([
+    prisma.emailVerification.deleteMany({ where: { userId } }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { email: trimmed, isEmailVerified: false },
+    }),
+  ]);
+
+  // Issue a fresh verification token + send email to the new address
+  const token = generateToken();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await prisma.emailVerification.create({
+    data: { userId, token, expiresAt },
+  });
+  await sendVerificationEmail(trimmed, current.fullName, token);
+}
+
+// ═════════════════════════════════════════════════════════════
 // PASSWORD CHANGE (authenticated)
 // ═════════════════════════════════════════════════════════════
 

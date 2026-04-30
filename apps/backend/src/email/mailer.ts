@@ -9,7 +9,7 @@ export async function sendVerificationEmail(
   fullName: string,
   token: string
 ) {
-  const link = `${APP_URL}/auth/verify-email?token=${token}`;
+  const link = `${APP_URL}/verify-email?token=${token}`;
 
   await resend.emails.send({
     from: FROM,
@@ -41,7 +41,7 @@ export async function sendPasswordResetEmail(
   fullName: string,
   token: string
 ) {
-  const link = `${APP_URL}/auth/reset-password?token=${token}`;
+  const link = `${APP_URL}/reset-password?token=${token}`;
 
   await resend.emails.send({
     from: FROM,

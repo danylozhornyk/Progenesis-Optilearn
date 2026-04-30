@@ -1,4 +1,8 @@
 {
+  "nav": {
+    "courses": "Курси",
+    "faq": "FAQ"
+  },
   "common": {
     "appName": "Progenesis",
     "signIn": "Увійти",
@@ -79,11 +83,177 @@
       "quoteAuthor": "Вільям Пол Терстон"
     },
     "emailVerification": {
-      "banner": "Будь ласка, підтвердіть вашу електронну адресу. Перевірте вхідні повідомлення."
+      "banner": "Будь ласка, підтвердіть вашу електронну адресу. Перевірте вхідні повідомлення.",
+      "verifying": "Підтвердження email…",
+      "successTitle": "Email підтверджено!",
+      "successDescription": "Вашу електронну адресу успішно підтверджено. Тепер ви можете користуватися акаунтом.",
+      "goToProfile": "Перейти до профілю",
+      "errorTitle": "Помилка підтвердження",
+      "errorDescription": "Це посилання для підтвердження недійсне або застаріло. Запросіть нове.",
+      "missingToken": "У посиланні відсутній токен підтвердження.",
+      "backToLogin": "Назад до входу"
     }
   },
   "dashboard": {
     "title": "Панель керування",
     "welcome": "З поверненням, {name}"
+  },
+  "courses": {
+    "title": "Курси",
+    "subtitle": "Ознайомтеся з інтерактивними курсами математики",
+    "empty": "Курси ще не додані.",
+    "by": "автор: {author}",
+    "lessons": "{count} уроків",
+    "enroll": "Почати навчання",
+    "enrolling": "Запуск…",
+    "continueLearning": "Продовжити навчання",
+    "courseCompleted": "Курс завершено",
+    "enrolledOn": "Записано · {percent}% завершено",
+    "leaveCourse": "Залишити курс",
+    "leaveCourseConfirm": "Видалити ваш прогрес з цього курсу? Цю дію не можна скасувати.",
+    "lessonsTitle": "Уроки",
+    "difficulty": {
+      "BEGINNER": "Початківець",
+      "INTERMEDIATE": "Середній",
+      "ADVANCED": "Просунутий"
+    }
+  },
+  "test": {
+    "question": "Питання {n}",
+    "submit": "Надіслати відповіді",
+    "submitting": "Надсилання…",
+    "timeLeft": "Залишилось часу",
+    "passed": "Пройдено",
+    "failed": "Не пройдено",
+    "score": "{score} / {max}",
+    "percent": "{pct}%",
+    "yourAnswer": "Ваша відповідь",
+    "correctAnswer": "Правильна відповідь",
+    "explanation": "Пояснення",
+    "openPlaceholder": "Введіть відповідь…",
+    "allRequired": "Будь ласка, дайте відповідь на всі питання перед надсиланням.",
+    "tryAgain": "Спробувати знову",
+    "backToLesson": "Назад до уроку",
+    "timedOut": "Час вийшов — ваші відповіді надіслано.",
+    "alreadyPassed": "Ви вже пройшли цей тест.",
+    "alreadyPassedNotice": "Ви вже пройшли цей тест — повторне проходження неможливе.",
+    "viewResult": "Переглянути результат",
+    "yourBestResult": "Ваш результат",
+    "passedOn": "Пройдено {date}",
+    "noRetakes": "Повторне проходження заборонено",
+    "loadingResult": "Завантаження результату…"
+  },
+  "lesson": {
+    "theory": "Теорія",
+    "tests": "Тести",
+    "optional": "Необов'язковий",
+    "mandatory": "Обов'язковий",
+    "noTests": "Для цього уроку тести ще не додані.",
+    "tasks": "{count} завдань",
+    "timeLimit": "Ліміт {min} хв",
+    "noTimeLimit": "Без ліміту часу",
+    "passing": "{score}% для проходження",
+    "startTest": "Пройти тест",
+    "attempts": "{max} спроб",
+    "unlimitedAttempts": "Необмежена кількість спроб",
+    "locked": "Заблоковано",
+    "lockedHint": "Пройдіть усі тести уроку {n}, щоб розблокувати.",
+    "lockedTitle": "Цей урок заблоковано",
+    "lockedDescription": "Ви повинні пройти всі тести попереднього обов'язкового уроку, перш ніж отримати доступ до цього.",
+    "goToBlocking": "Відкрити урок, який потрібно завершити",
+    "lockedTestNotice": "Ви зможете пройти цей тест, щойно урок буде розблоковано.",
+    "progressPassed": "{passed}/{total} тестів пройдено",
+    "allPassed": "Усі тести пройдено",
+    "completed": "Завершено"
+  },
+  "faq": {
+    "title": "FAQ",
+    "subtitle": "Поширені запитання про Progenesis"
+  },
+  "profile": {
+    "title": "Мій профіль",
+    "subtitle": "Керуйте інформацією свого акаунту",
+    "fullName": "Повне ім'я",
+    "email": "Електронна пошта",
+    "role": "Роль",
+    "memberSince": "Учасник з",
+    "emailVerified": "Email підтверджено",
+    "emailUnverified": "Email не підтверджено",
+    "editName": "Редагувати",
+    "saveName": "Зберегти",
+    "cancel": "Скасувати",
+    "savingName": "Збереження…",
+    "changeAvatar": "Змінити фото",
+    "uploadingAvatar": "Завантаження…",
+    "avatarError": "Не вдалося завантажити фото",
+    "nameError": "Не вдалося зберегти ім'я",
+    "stats": {
+      "courses": "Зараховано курсів",
+      "tests": "Завершено тестів",
+      "achievements": "Досягнення"
+    },
+    "tabs": {
+      "personal": "Особисте",
+      "progress": "Прогрес",
+      "achievements": "Досягнення"
+    },
+    "personal": {
+      "accountSection": "Інформація акаунту",
+      "securitySection": "Безпека та пошта",
+      "changePassword": "Змінити пароль",
+      "currentPassword": "Поточний пароль",
+      "newPassword": "Новий пароль",
+      "confirmNewPassword": "Підтвердіть новий пароль",
+      "passwordChanged": "Пароль успішно змінено.",
+      "passwordsDontMatch": "Паролі не співпадають.",
+      "submitChangePassword": "Оновити пароль",
+      "submittingPassword": "Оновлення…",
+      "changeEmail": "Змінити email",
+      "newEmail": "Нова електронна адреса",
+      "emailChanged": "Email оновлено. Перевірте нову поштову скриньку для підтвердження.",
+      "submitChangeEmail": "Оновити email",
+      "submittingEmail": "Оновлення…",
+      "verifyEmail": "Підтвердити email",
+      "verifyEmailDescription": "Не отримали посилання для підтвердження або воно застаріло? Ми можемо надіслати нове.",
+      "sendVerification": "Надіслати лист підтвердження",
+      "verificationSent": "Лист підтвердження надіслано. Перевірте вхідні.",
+      "alreadyVerified": "Ваш email вже підтверджено.",
+      "forgotPassword": "Забули пароль",
+      "forgotPasswordDescription": "Надіслати посилання для скидання пароля на вашу поточну адресу.",
+      "sendResetLink": "Надіслати посилання",
+      "resetLinkSent": "Посилання надіслано. Перевірте вхідні.",
+      "sending": "Надсилання…"
+    },
+    "progress": {
+      "title": "Прогрес курсів",
+      "subtitle": "Ваш прогрес за всіма курсами",
+      "empty": "Поки що немає опублікованих курсів.",
+      "lessons": "Уроки",
+      "tests": "Тести",
+      "lessonsProgress": "{done}/{total} завершено",
+      "testsProgress": "{done}/{total} пройдено",
+      "notStarted": "Не розпочато",
+      "notEnrolled": "Не записані",
+      "inProgress": "У процесі",
+      "completed": "Завершено",
+      "browseCourse": "Перейти до курсу",
+      "continue": "Продовжити"
+    },
+    "achievements": {
+      "title": "Досягнення",
+      "subtitle": "Наведіть на значок, щоб побачити, як його отримати",
+      "earned": "Отримано",
+      "locked": "Ще не отримано",
+      "earnedOn": "Отримано {date}",
+      "category": "Категорія",
+      "points": "{n} балів",
+      "howTo": "Як отримати",
+      "categoryLabel": {
+        "PROGRESS": "Прогрес",
+        "SKILL": "Майстерність",
+        "STREAK": "Серія",
+        "SOCIAL": "Соціальні"
+      }
+    }
   }
 }

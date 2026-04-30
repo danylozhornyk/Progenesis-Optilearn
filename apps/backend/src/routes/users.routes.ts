@@ -5,8 +5,11 @@ import {
   updateUser,
   deleteUser,
   getUserProgress,
+  getDetailedCourseProgress,
 } from '../services/users.service';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { uploadSingle } from '../middleware/upload.middleware';
+import { storage } from '../storage';
 
 const router = Router();
 
@@ -43,6 +46,22 @@ router.patch('/:id/preferences', authenticate, async (req: AuthRequest, res) => 
   }
 });
 
+router.get('/:id/course-progress', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (
+      req.user!.role === 'STUDENT' &&
+      req.user!.userId !== req.params.id
+    ) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    const data = await getDetailedCourseProgress(req.params.id);
+    res.json(data);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch course progress' });
+  }
+});
+
 router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
   try {
     // Students can only view their own progress
@@ -57,6 +76,29 @@ router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
     res.json(progress);
   } catch {
     res.status(500).json({ error: 'Failed to fetch progress' });
+  }
+});
+
+// ── Upload avatar ─────────────────────────────────────────────
+router.post('/:id/avatar', authenticate, uploadSingle, async (req: AuthRequest, res) => {
+  try {
+    if (req.user!.role !== 'ADMIN' && req.user!.userId !== req.params.id) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    const ext = req.file.mimetype.split('/')[1].replace('jpeg', 'jpg');
+    const filename = `avatars/${req.params.id}-${Date.now()}.${ext}`;
+    const url = await storage.save(filename, req.file.buffer, req.file.mimetype);
+
+    const user = await updateUser(req.params.id, { avatarUrl: url });
+    res.json(user);
+  } catch (e) {
+    console.error('[avatar upload]', e);
+    res.status(500).json({ error: 'Failed to upload avatar' });
   }
 });
 

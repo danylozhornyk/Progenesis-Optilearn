@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,7 @@ export default function Header() {
   const { user, logout, theme, locale, updatePreferences } = useAuth();
   const { t } = useT();
   const router = useRouter();
+  const pathname = usePathname();
   const isDark = theme === 'dark';
   const currentLanguage = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0];
 
@@ -62,13 +63,37 @@ export default function Header() {
     <header className="border-b border-border bg-background sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-5 h-5 bg-foreground rounded-sm transition-transform group-hover:scale-110" />
-          <span className="font-semibold text-foreground tracking-tight">
-            {t('common.appName')}
-          </span>
-        </Link>
+        {/* Logo + primary nav */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
+            <div className="w-5 h-5 bg-foreground rounded-sm transition-transform group-hover:scale-110" />
+            <span className="font-semibold text-foreground tracking-tight">
+              {t('common.appName')}
+            </span>
+          </Link>
+
+          <nav className="hidden sm:flex items-center gap-1">
+            {[
+              { href: '/courses', label: t('nav.courses') },
+              { href: '/faq', label: t('nav.faq') },
+            ].map(({ href, label }) => {
+              const active = pathname === href || pathname.startsWith(href + '/');
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    active
+                      ? 'text-foreground font-medium bg-accent'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
         {/* Right side */}
         <nav className="flex items-center gap-1">
@@ -119,7 +144,7 @@ export default function Header() {
           {user ? (
             <>
               <Link
-                href="/dashboard"
+                href="/profile"
                 title={user.fullName}
                 className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border hover:ring-2 hover:ring-foreground transition-all flex items-center justify-center bg-muted shrink-0"
               >

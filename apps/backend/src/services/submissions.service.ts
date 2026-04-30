@@ -1,5 +1,7 @@
 import { prisma } from '../db/prisma';
 import { checkAndAwardAchievements } from './achievements.service';
+import { getLessonAccess } from './lessons.service';
+import { computeCourseProgress } from './users.service';
 
 interface TaskAnswerInput {
   taskId: string;
@@ -29,6 +31,19 @@ export async function submitTest(data: {
   });
 
   if (!test) throw new Error('Test not found');
+
+  // ── 1a. Block retake after a successful pass ─────────────────
+  const alreadyPassed = await prisma.testSubmission.findFirst({
+    where: { userId: data.userId, testId: data.testId, passed: true },
+    select: { id: true },
+  });
+  if (alreadyPassed) throw new Error('TEST_ALREADY_PASSED');
+
+  // ── 1b. Enforce lesson-progression gate ─────────────────────
+  const access = await getLessonAccess(data.userId, test.lessonId);
+  if (access && !access.unlocked) {
+    throw new Error('LESSON_LOCKED');
+  }
 
   // ── 2. Check attempt limit ──────────────────────────────────
   if (test.maxAttempts !== null) {
@@ -97,7 +112,7 @@ export async function submitTest(data: {
     answers: gradedAnswers, // store the whole array as JSONB
   },
   include: {
-    test: { select: { title: true, passingScore: true } },
+    test: { select: { title: true, titleUk: true, passingScore: true } },
   },
 });
 
@@ -117,11 +132,59 @@ export async function submitTest(data: {
   };
 }
 
+/**
+ * Returns the user's best submission for a given test, or null.
+ * "Best" = passed first, then highest percent, then most recent.
+ * The result is the row most useful for showing the test as "completed".
+ */
+export function getBestSubmissionForTest(userId: string, testId: string) {
+  return prisma.testSubmission.findFirst({
+    where: { userId, testId },
+    orderBy: [
+      { passed: 'desc' },
+      { percentScore: 'desc' },
+      { submittedAt: 'desc' },
+    ],
+    include: {
+      test: { select: { id: true, title: true, titleUk: true, passingScore: true } },
+    },
+  });
+}
+
+/**
+ * Returns the user's best submission for every test in a given lesson,
+ * keyed by testId. Tests with no submission are simply absent from the map.
+ */
+export async function getBestSubmissionsForLesson(userId: string, lessonId: string) {
+  const tests = await prisma.test.findMany({
+    where: { lessonId },
+    select: { id: true },
+  });
+  if (tests.length === 0) return {} as Record<string, unknown>;
+
+  // One query per test is fine here (test count per lesson is small).
+  const entries = await Promise.all(
+    tests.map(async (t) => {
+      const sub = await prisma.testSubmission.findFirst({
+        where: { userId, testId: t.id },
+        orderBy: [
+          { passed: 'desc' },
+          { percentScore: 'desc' },
+          { submittedAt: 'desc' },
+        ],
+      });
+      return [t.id, sub] as const;
+    })
+  );
+
+  return Object.fromEntries(entries.filter(([, v]) => v !== null));
+}
+
 export function getSubmissionsByUser(userId: string) {
   return prisma.testSubmission.findMany({
     where: { userId },
     include: {
-      test: { select: { id: true, title: true } }
+      test: { select: { id: true, title: true, titleUk: true } }
     },
     orderBy: { submittedAt: 'desc' },
   });
@@ -141,7 +204,7 @@ export function getSubmissionById(id: string) {
   return prisma.testSubmission.findUnique({
     where: { id },
     include: {
-      test: { select: { id: true, title: true, passingScore: true } },
+      test: { select: { id: true, title: true, titleUk: true, passingScore: true } },
     },
   });
 }
@@ -194,51 +257,24 @@ function gradeAnswer(
 async function updateUserProgress(
   userId: string,
   test: { lessonId: string },
-  submissionTotalScore: number
+  // Kept for signature compatibility; the recomputed totalScore is authoritative.
+  _submissionTotalScore: number
 ) {
   const lesson = await prisma.lesson.findUnique({
     where: { id: test.lessonId },
     select: { courseId: true },
   });
-
   if (!lesson) return;
 
-  const courseId = lesson.courseId;
-
-  const [totalLessons, allSubmissions] = await Promise.all([
-    prisma.lesson.count({ where: { courseId } }),
-    prisma.testSubmission.findMany({
-      where: { userId, passed: true },
-      include: { test: { select: { lessonId: true } } },
-    }),
-  ]);
-
-  const completedLessonIds = new Set(
-    allSubmissions.map((s) => s.test.lessonId)
+  const { progressPercent, totalScore } = await computeCourseProgress(
+    userId,
+    lesson.courseId,
   );
 
-  const progressPercent =
-    totalLessons > 0
-      ? (completedLessonIds.size / totalLessons) * 100
-      : 0;
-
-  // Sum all scores across all submissions for this course
-  const courseSubmissions = await prisma.testSubmission.findMany({
-    where: {
-      userId,
-      test: { lesson: { courseId } },
-    },
-    select: { totalScore: true },
-  });
-
-  const totalScore = courseSubmissions.reduce(
-    (sum, s) => sum + Number(s.totalScore),
-    0
-  );
-
+  // Submitting a test counts as an enrollment if the user wasn't enrolled yet.
   await prisma.userProgress.upsert({
-    where: { userId_courseId: { userId, courseId } },
-    update: { progressPercent, totalScore, updatedAt: new Date() },
-    create: { userId, courseId, progressPercent, totalScore },
+    where: { userId_courseId: { userId, courseId: lesson.courseId } },
+    update: { progressPercent, totalScore: Math.round(totalScore), updatedAt: new Date() },
+    create: { userId, courseId: lesson.courseId, progressPercent, totalScore: Math.round(totalScore) },
   });
 }

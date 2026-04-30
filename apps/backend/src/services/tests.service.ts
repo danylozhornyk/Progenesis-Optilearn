@@ -24,7 +24,7 @@ export function getTestById(id: string) {
   return prisma.test.findUnique({
     where: { id },
     include: {
-      lesson: { select: { id: true, title: true } },
+      lesson: { select: { id: true, title: true, titleUk: true, course: { select: { id: true } } } },
       tasks: {
         orderBy: { orderIndex: 'asc' },
         include: { graph: true },

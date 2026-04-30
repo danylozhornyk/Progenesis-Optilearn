@@ -4,6 +4,7 @@ import {
   sendVerification,
   verifyEmail,
   changePassword,
+  changeEmail,
   requestPasswordReset,
   resetPassword,
 } from '../services/emailAuth.service';
@@ -88,6 +89,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
         fullName: true,
         role: true,
         isEmailVerified: true,
+        avatarUrl: true,
         preferences: true,
         createdAt: true,
       },
@@ -124,6 +126,22 @@ router.get('/verify-email', async (req, res) => {
     res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Verification failed';
+    res.status(400).json({ error: message });
+  }
+});
+
+// ── Change email (authenticated) — sends verification to new email ──
+router.post('/change-email', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { newEmail } = req.body;
+    if (!newEmail) return res.status(400).json({ error: 'newEmail is required' });
+
+    await changeEmail(req.user!.userId, newEmail);
+    res.json({
+      message: 'Email updated. Please check your new inbox to verify it.',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to change email';
     res.status(400).json({ error: message });
   }
 });

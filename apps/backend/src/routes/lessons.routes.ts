@@ -6,6 +6,8 @@ import {
   createLesson,
   updateLesson,
   deleteLesson,
+  getCourseLessonAccess,
+  getLessonAccess,
 } from '../services/lessons.service';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth.middleware';
 
@@ -18,6 +20,29 @@ router.get('/course/:courseId', async (req, res) => {
     res.json(lessons);
   } catch {
     res.status(500).json({ error: 'Failed to fetch lessons' });
+  }
+});
+
+// ── Lesson access status for a course (auth required) ─────────
+router.get('/course/:courseId/access', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const status = await getCourseLessonAccess(req.user.userId, req.params.courseId);
+    res.json(status);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch lesson access' });
+  }
+});
+
+// ── Single-lesson access status (auth required) ───────────────
+router.get('/:id/access', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const status = await getLessonAccess(req.user.userId, req.params.id);
+    if (!status) return res.status(404).json({ error: 'Lesson not found' });
+    res.json(status);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch lesson access' });
   }
 });
 

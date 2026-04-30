@@ -2,10 +2,20 @@ import { Router } from 'express';
 import {
   getAchievementsByUser,
   awardAchievement,
+  getAchievementDefinitions,
 } from '../services/achievements.service';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// ── Public — list of all achievement definitions ──────────────
+router.get('/definitions', (_req, res) => {
+  try {
+    res.json(getAchievementDefinitions());
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch achievement definitions' });
+  }
+});
 
 // ── Authenticated ─────────────────────────────────────────────
 router.get('/user/:userId', authenticate, async (req: AuthRequest, res) => {

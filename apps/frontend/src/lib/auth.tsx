@@ -16,6 +16,7 @@ interface User {
   role: string;
   isEmailVerified: boolean;
   avatarUrl?: string;
+  createdAt?: string;
   preferences: {
     locale?: string;
     theme?: string;
@@ -31,6 +32,8 @@ interface AuthContext {
   login: (token: string, user: User) => void;
   logout: () => void;
   updatePreferences: (prefs: Partial<User['preferences']>) => void;
+  refreshUser: () => Promise<void>;
+  patchUser: (fields: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContext>({
@@ -41,6 +44,8 @@ const AuthContext = createContext<AuthContext>({
   login: () => {},
   logout: () => {},
   updatePreferences: () => {},
+  refreshUser: async () => {},
+  patchUser: () => {},
 });
 
 // ── Guest preferences via localStorage ───────────────────────
@@ -127,14 +132,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     applyAndSet(resolvePreferences(u));
   }
 
-  // ── Logout — revert to guest prefs ───────────────────────────
+  // ── Logout — carry current prefs into guest state ────────────
   function logout() {
     api.post('/auth/logout', {}).catch(() => {});
     localStorage.removeItem('token');
+    setGuestPreferences({ locale, theme });
     setUser(null);
-    const guestPrefs = getGuestPreferences();
-    applyAndSet(guestPrefs);
+    applyAndSet({ locale, theme });
   }
+
+  // ── Patch user state locally ──────────────────────────────────
+  const patchUser = useCallback((fields: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...fields } : prev));
+  }, []);
+
+  // ── Refresh user from server ──────────────────────────────────
+  const refreshUser = useCallback(async () => {
+    try {
+      const u = await api.get<User>('/auth/me');
+      setUser(u);
+      applyAndSet(resolvePreferences(u));
+    } catch {}
+  }, []);
 
   // ── Update preferences ────────────────────────────────────────
   const updatePreferences = useCallback(
@@ -170,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, locale, theme, login, logout, updatePreferences }}
+      value={{ user, loading, locale, theme, login, logout, updatePreferences, refreshUser, patchUser }}
     >
       {children}
     </AuthContext.Provider>

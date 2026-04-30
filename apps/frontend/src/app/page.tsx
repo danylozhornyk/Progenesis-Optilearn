@@ -42,7 +42,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {user ? (
               <Button size="lg" asChild className="shadow-soft">
-                <Link href="/dashboard">{t('common.dashboard')}</Link>
+                <Link href="/profile">{t('common.dashboard')}</Link>
               </Button>
             ) : (
               <>

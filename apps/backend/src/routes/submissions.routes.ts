@@ -4,6 +4,8 @@ import {
   getSubmissionsByUser,
   getSubmissionsByTest,
   getSubmissionById,
+  getBestSubmissionForTest,
+  getBestSubmissionsForLesson,
 } from '../services/submissions.service';
 import {
   authenticate,
@@ -43,6 +45,29 @@ router.get('/my', authenticate, async (req: AuthRequest, res) => {
   try {
     const submissions = await getSubmissionsByUser(req.user!.userId);
     res.json(submissions);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch submissions' });
+  }
+});
+
+// ── Caller's own best submission for a single test ───────────
+router.get('/test/:testId/me', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const sub = await getBestSubmissionForTest(req.user!.userId, req.params.testId);
+    res.json(sub); // null if none
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch submission' });
+  }
+});
+
+// ── Caller's best submissions for every test in a lesson ─────
+router.get('/lesson/:lessonId/me', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const map = await getBestSubmissionsForLesson(
+      req.user!.userId,
+      req.params.lessonId
+    );
+    res.json(map);
   } catch {
     res.status(500).json({ error: 'Failed to fetch submissions' });
   }

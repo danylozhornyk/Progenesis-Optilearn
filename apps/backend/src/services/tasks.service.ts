@@ -30,7 +30,7 @@ export function getTaskById(id: string) {
     where: { id },
     include: {
       graph: true,
-      test: { select: { id: true, title: true } },
+      test: { select: { id: true, title: true, titleUk: true } },
     },
   });
 }

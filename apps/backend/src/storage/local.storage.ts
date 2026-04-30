@@ -12,7 +12,9 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   async save(filename: string, buffer: Buffer, _mimetype: string): Promise<string> {
-    fs.writeFileSync(path.join(UPLOADS_DIR, filename), buffer);
+    const dest = path.join(UPLOADS_DIR, filename);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, buffer);
     return this.getUrl(filename);
   }
 
