@@ -18,6 +18,16 @@ import { prisma } from '../db/prisma';
 
 const router = Router();
 
+// Returns an error code string if the password fails any rule, null if valid.
+function validatePassword(password: string): string | null {
+  if (password.length < 8)           return 'PASSWORD_TOO_SHORT';
+  if (!/[A-Z]/.test(password))       return 'PASSWORD_NO_UPPERCASE';
+  if (!/[a-z]/.test(password))       return 'PASSWORD_NO_LOWERCASE';
+  if (!/[0-9]/.test(password))       return 'PASSWORD_NO_DIGIT';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'PASSWORD_NO_SPECIAL';
+  return null;
+}
+
 // ── Register — sends verification email automatically ─────────
 router.post('/register', registerRateLimit, async (req, res) => {
   try {
@@ -29,11 +39,8 @@ router.post('/register', registerRateLimit, async (req, res) => {
       });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        error: 'Password must be at least 8 characters',
-      });
-    }
+    const pwError = validatePassword(password);
+    if (pwError) return res.status(400).json({ error: pwError });
 
     const result = await register({ email, password, fullName });
 
@@ -157,6 +164,9 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res) => {
       });
     }
 
+    const pwError = validatePassword(newPassword);
+    if (pwError) return res.status(400).json({ error: pwError });
+
     await changePassword(req.user!.userId, currentPassword, newPassword);
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
@@ -193,6 +203,9 @@ router.post('/reset-password', async (req, res) => {
     if (!token || !newPassword) {
       return res.status(400).json({ error: 'token and newPassword are required' });
     }
+
+    const pwError = validatePassword(newPassword);
+    if (pwError) return res.status(400).json({ error: pwError });
 
     await resetPassword(token, newPassword);
     res.json({ message: 'Password reset successfully. You can now log in.' });

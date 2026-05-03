@@ -12,14 +12,11 @@ datasource db {
 enum UserRole {
   STUDENT
   ADMIN
-  GUEST
 }
 
 enum CourseStatus {
   DRAFT
   PUBLISHED
-  ARCHIVED
-  HIDDEN
 }
 
 enum DifficultyLevel {
@@ -171,6 +168,8 @@ model Task {
   correctAnswer   String
   answerTolerance Decimal? @db.Decimal(20, 18)
   maxScore        Decimal  @default(1.0) @db.Decimal(5, 2)
+  /// Optional image illustrating the question
+  imageUrl        String?  @db.VarChar(500)
   explanation     String?
   explanationUk   String?
   /// [{strength:0-100, text:"..."}] — higher strength = more explicit hint; served based on user progress
@@ -278,7 +277,8 @@ model TestSubmission {
 model AiRecommendation {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String   @db.Uuid
-  analysis    Json     // full AI response stored as JSONB
+  analysis    Json     // English AI analysis (JSONB)
+  analysisUk  Json?    // Ukrainian AI analysis (JSONB) — nullable for legacy rows
   createdAt   DateTime @default(now()) @db.Timestamptz()
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)

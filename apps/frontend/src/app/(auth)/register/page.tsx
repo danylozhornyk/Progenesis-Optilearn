@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/lib/auth';
@@ -19,16 +19,30 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  PasswordStrengthMeter,
+  isPasswordErrorCode,
+} from '@/components/PasswordStrengthMeter';
 
-const registerSchema = z.object({
-  fullName: z.string().min(2).max(200),
-  email: z.string().email(),
-  password: z.string().min(8),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const passwordRules = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
+
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2).max(200),
+    email: z.string().email(),
+    password: passwordRules,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -55,6 +69,8 @@ export default function RegisterPage() {
     defaultValues: { fullName: '', email: '', password: '', confirmPassword: '' },
   });
 
+  const passwordValue = useWatch({ control: form.control, name: 'password' });
+
   async function onSubmit(values: RegisterForm) {
     setError('');
     try {
@@ -66,7 +82,8 @@ export default function RegisterPage() {
       login(data.token, data.user);
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.register.failed'));
+      const msg = err instanceof Error ? err.message : t('auth.register.failed');
+      setError(isPasswordErrorCode(msg) ? t(`auth.passwordErrors.${msg}`) : msg);
     }
   }
 
@@ -137,6 +154,7 @@ export default function RegisterPage() {
                     {...field}
                   />
                 </FormControl>
+                <PasswordStrengthMeter password={passwordValue} />
                 <FormMessage />
               </FormItem>
             )}

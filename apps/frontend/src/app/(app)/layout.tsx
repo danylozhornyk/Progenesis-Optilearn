@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { AchievementToastProvider } from '@/lib/achievement-toasts';
+import { AchievementToastContainer } from '@/components/AchievementToastContainer';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -24,5 +26,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  return <>{children}</>;
+  return (
+    <AchievementToastProvider>
+      {children}
+      <AchievementToastContainer />
+    </AchievementToastProvider>
+  );
 }

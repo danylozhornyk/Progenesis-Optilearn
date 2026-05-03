@@ -114,10 +114,6 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ) {
-  if (newPassword.length < 8) {
-    throw new Error('New password must be at least 8 characters');
-  }
-
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { passwordHash: true },
@@ -164,10 +160,6 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function resetPassword(token: string, newPassword: string) {
-  if (newPassword.length < 8) {
-    throw new Error('Password must be at least 8 characters');
-  }
-
   const reset = await prisma.passwordReset.findUnique({
     where: { token },
   });

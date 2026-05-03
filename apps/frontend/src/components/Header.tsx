@@ -72,27 +72,29 @@ export default function Header() {
             </span>
           </Link>
 
-          <nav className="hidden sm:flex items-center gap-1">
-            {[
-              { href: '/courses', label: t('nav.courses') },
-              { href: '/faq', label: t('nav.faq') },
-            ].map(({ href, label }) => {
-              const active = pathname === href || pathname.startsWith(href + '/');
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    active
-                      ? 'text-foreground font-medium bg-accent'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+          {user?.role !== 'ADMIN' && (
+            <nav className="hidden sm:flex items-center gap-1">
+              {[
+                { href: '/courses', label: t('nav.courses') },
+                { href: '/faq',     label: t('nav.faq')     },
+              ].map(({ href, label }) => {
+                const active = pathname === href || pathname.startsWith(href + '/');
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                      active
+                        ? 'text-foreground font-medium bg-accent'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </div>
 
         {/* Right side */}

@@ -36,9 +36,11 @@ export function getTestById(id: string) {
 export async function createTest(data: {
   lessonId: string;
   title: string;
-  description?: string;
-  timeLimitMin?: number;
-  maxAttempts?: number;
+  titleUk?: string | null;
+  description?: string | null;
+  descriptionUk?: string | null;
+  timeLimitMin?: number | null;
+  maxAttempts?: number | null;
   passingScore?: number;
   shuffleQuestions?: boolean;
 }) {
@@ -49,9 +51,11 @@ export async function createTest(data: {
 
 export async function updateTest(id: string, data: {
   title?: string;
-  description?: string;
-  timeLimitMin?: number;
-  maxAttempts?: number;
+  titleUk?: string | null;
+  description?: string | null;
+  descriptionUk?: string | null;
+  timeLimitMin?: number | null;
+  maxAttempts?: number | null;
   passingScore?: number;
   shuffleQuestions?: boolean;
 }) {

@@ -4,131 +4,29 @@ import 'katex/dist/katex.min.css';
 import { useEffect, useState } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
-import katex from 'katex';
 import { useT } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { ArrowLeftIcon, ClockIcon } from './_components/icons';
+import { ContentRenderer } from './_components/ContentRenderer';
+import { LessonSkeleton } from './_components/LessonSkeleton';
+import { LockedBanner } from './_components/LockedBanner';
+import { TestsList } from './_components/TestsList';
+import type {
+  Lesson,
+  Test,
+  MySubmission,
+  LessonAccess,
+  Tab,
+} from './_components/types';
 
-interface ContentBlock {
-  type: 'text' | 'latex';
-  value: string;
-}
-
-interface Lesson {
-  id: string;
-  title: string;
-  titleUk?: string | null;
-  orderIndex: number;
-  estimatedMinutes: number | null;
-  isMandatory: boolean;
-  content: ContentBlock[];
-  contentUk?: ContentBlock[] | null;
-  course: { id: string; title: string; titleUk?: string | null };
-}
-
-interface Test {
-  id: string;
-  title: string;
-  titleUk?: string | null;
-  description?: string | null;
-  descriptionUk?: string | null;
-  timeLimitMin?: number | null;
-  maxAttempts?: number | null;
-  passingScore: number;
-  _count: { tasks: number };
-}
-
-function ClockIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-    </svg>
-  );
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
-    </svg>
-  );
-}
-
-function LatexBlock({ source }: { source: string }) {
-  let html = '';
-  try {
-    html = katex.renderToString(source, { throwOnError: false, displayMode: true });
-  } catch {
-    html = `<code>${source}</code>`;
-  }
-  return (
-    <div
-      className="my-4 overflow-x-auto text-center py-3"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
-}
-
-function ContentRenderer({ blocks }: { blocks: ContentBlock[] }) {
-  return (
-    <div className="space-y-4">
-      {blocks.map((block, i) => {
-        if (block.type === 'latex') {
-          return <LatexBlock key={i} source={block.value} />;
-        }
-        return (
-          <p key={i} className="text-sm text-muted-foreground leading-relaxed">
-            {block.value}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
-
-function LessonSkeleton() {
-  return (
-    <div className="animate-pulse space-y-6">
-      <div className="h-4 bg-muted rounded w-1/3" />
-      <div className="h-7 bg-muted rounded w-2/3" />
-      <div className="flex gap-2">
-        <div className="h-8 bg-muted rounded w-20" />
-        <div className="h-8 bg-muted rounded w-20" />
-      </div>
-      <div className="space-y-3 pt-2">
-        <div className="h-4 bg-muted rounded w-full" />
-        <div className="h-4 bg-muted rounded w-5/6" />
-        <div className="h-16 bg-muted rounded w-full" />
-        <div className="h-4 bg-muted rounded w-4/5" />
-      </div>
-    </div>
-  );
-}
-
-type Tab = 'theory' | 'tests';
-
-interface MySubmission {
-  id: string;
-  testId: string;
-  totalScore: number;
-  maxScore: number;
-  percentScore: number;
-  passed: boolean;
-  submittedAt: string;
-}
-
-interface LessonAccess {
-  lessonId: string;
-  orderIndex: number;
-  testCount: number;
-  passedTestCount: number;
-  allTestsPassed: boolean;
-  unlocked: boolean;
-  blockingLessonId: string | null;
-}
-
+/**
+ * Lesson detail page. Loads the lesson + its tests, then (when logged in)
+ * also fetches the access gate and the user's previous submissions. Renders
+ * a tab bar with theory / tests; sub-components handle the actual content.
+ */
 export default function LessonPage() {
   const { id: courseId, lessonId } = useParams<{ id: string; lessonId: string }>();
   const { t, locale } = useT();
@@ -208,6 +106,23 @@ export default function LessonPage() {
 
         {loading ? (
           <LessonSkeleton />
+        ) : lesson && lesson.course.status === 'DRAFT' ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 mb-2">
+                {t('courses.draftBadge')}
+              </span>
+              <h2 className="text-xl font-semibold text-foreground">{t('courses.draftCourseTitle')}</h2>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">{t('courses.draftCourseDescription')}</p>
+            </div>
+          </div>
         ) : lesson ? (
           <div className="space-y-6">
 
@@ -239,28 +154,10 @@ export default function LessonPage() {
 
             {/* Locked banner */}
             {isLocked && (
-              <div className="rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 p-4 space-y-2">
-                <div className="flex items-center gap-2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-700 dark:text-yellow-400">
-                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                  <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
-                    {t('lesson.lockedTitle')}
-                  </p>
-                </div>
-                <p className="text-xs text-yellow-800 dark:text-yellow-300/90 leading-relaxed">
-                  {t('lesson.lockedDescription')}
-                </p>
-                {access?.blockingLessonId && (
-                  <Link
-                    href={`/courses/${courseId}/lessons/${access.blockingLessonId}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-yellow-900 dark:text-yellow-200 underline underline-offset-2 hover:no-underline"
-                  >
-                    {t('lesson.goToBlocking')}
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6"/></svg>
-                  </Link>
-                )}
-              </div>
+              <LockedBanner
+                courseId={courseId}
+                blockingLessonId={access?.blockingLessonId ?? null}
+              />
             )}
 
             {/* Tab bar */}
@@ -299,89 +196,12 @@ export default function LessonPage() {
 
             {/* Tests tab */}
             {tab === 'tests' && (
-              <div className="space-y-3">
-                {tests.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t('lesson.noTests')}</p>
-                ) : (
-                  tests.map((test) => {
-                    const testTitle = (locale === 'uk' && test.titleUk) ? test.titleUk : test.title;
-                    const testDescription = (locale === 'uk' && test.descriptionUk) ? test.descriptionUk : test.description;
-                    return (
-                    <div key={test.id} className="surface p-5 space-y-3">
-                      {/* Test header */}
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1 flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-foreground">{testTitle}</h3>
-                          {testDescription && (
-                            <p className="text-xs text-muted-foreground">{testDescription}</p>
-                          )}
-                        </div>
-                        {user && (() => {
-                          const sub = submissions[test.id];
-                          const passed = sub?.passed;
-
-                          if (passed) {
-                            const earned = Number(sub.totalScore);
-                            const max = Number(sub.maxScore);
-                            // Trim trailing .0 / .00 for clean display.
-                            const fmt = (n: number) =>
-                              Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '');
-                            return (
-                              <Link
-                                href={`/tests/${test.id}`}
-                                title={t('test.alreadyPassedNotice')}
-                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors tabular-nums"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M20 6 9 17l-5-5"/>
-                                </svg>
-                                {t('test.passed')} · {fmt(earned)}/{fmt(max)}
-                              </Link>
-                            );
-                          }
-
-                          if (isLocked) {
-                            return (
-                              <span
-                                title={t('lesson.lockedTestNotice')}
-                                className="shrink-0 inline-flex items-center px-3 py-1.5 rounded-md bg-muted text-muted-foreground text-xs font-medium cursor-not-allowed"
-                              >
-                                {t('lesson.locked')}
-                              </span>
-                            );
-                          }
-
-                          return (
-                            <Link
-                              href={`/tests/${test.id}`}
-                              className="shrink-0 inline-flex items-center px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium hover:opacity-90 transition-opacity"
-                            >
-                              {t('lesson.startTest')}
-                            </Link>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Test meta */}
-                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>{t('lesson.tasks', { count: test._count.tasks })}</span>
-                        <span>
-                          {test.timeLimitMin
-                            ? t('lesson.timeLimit', { min: test.timeLimitMin })
-                            : t('lesson.noTimeLimit')}
-                        </span>
-                        <span>{t('lesson.passing', { score: Math.round(Number(test.passingScore)) })}</span>
-                        <span>
-                          {test.maxAttempts
-                            ? t('lesson.attempts', { max: test.maxAttempts })
-                            : t('lesson.unlimitedAttempts')}
-                        </span>
-                      </div>
-                    </div>
-                    );
-                  })
-                )}
-              </div>
+              <TestsList
+                tests={tests}
+                userLoggedIn={!!user}
+                isLocked={!!isLocked}
+                submissions={submissions}
+              />
             )}
 
           </div>

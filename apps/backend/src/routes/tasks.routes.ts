@@ -5,6 +5,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  replaceTasksForTest,
   setHints,
   removeHints,
   getHintForUser,
@@ -63,11 +64,26 @@ router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
   }
 });
 
+// ── Bulk replace — used by the test structure editor ─────────
+// PUT /tasks/test/:testId  body: { tasks: TaskInput[] }
+router.put('/test/:testId', authenticate, requireRole('ADMIN'), async (req, res) => {
+  try {
+    const tasks = Array.isArray(req.body?.tasks) ? req.body.tasks : [];
+    const saved = await replaceTasksForTest(req.params.testId, tasks);
+    res.json(saved);
+  } catch (e) {
+    console.error('[tasks bulk replace]', e);
+    res.status(500).json({ error: 'Failed to replace tasks' });
+  }
+});
+
 // ── Hint — user-facing (scaffolded) ──────────────────────────
 
 router.get('/:id/hint', authenticate, async (req: AuthRequest, res) => {
   try {
-    const result = await getHintForUser(req.params.id, req.user!.userId);
+    const rawLevel = parseInt(String(req.query.level ?? '0'), 10);
+    const level = Number.isFinite(rawLevel) && rawLevel > 0 ? rawLevel : 0;
+    const result = await getHintForUser(req.params.id, level);
     if (result === null) return res.status(404).json({ error: 'Task not found' });
     res.json(result);
   } catch {

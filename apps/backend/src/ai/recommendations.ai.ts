@@ -22,45 +22,14 @@ export interface AiAnalysis {
   nextSteps: string[];
 }
 
-export async function generateRecommendations(
-  userData: {
-    fullName: string;
-    language?: string;
-    submissions: {
-      testTitle: string;
-      topic: string;
-      passed: boolean;
-      percentScore: number;
-      attemptNumber: number;
-      answers: { isCorrect: boolean }[];
-    }[];
-    progress: {
-      courseTitle: string;
-      progressPercent: number;
-    }[];
-  }
-): Promise<AiAnalysis> {
-  const prompt = buildPrompt(userData);
-
-  const response = await client.messages.create({
-  model: 'claude-sonnet-4-5',
-  max_tokens: 1024,
-  messages: [{ role: 'user', content: prompt }],
-});
-
-  const text = response.content
-    .filter((b) => b.type === 'text')
-    .map((b) => b.text)
-    .join('');
-
-  // Strip markdown code fences if present
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean) as AiAnalysis;
+/** Bilingual envelope: each generation produces both EN and UK versions. */
+export interface AiAnalysisBilingual {
+  en: AiAnalysis;
+  uk: AiAnalysis;
 }
 
-function buildPrompt(userData: {
+interface UserData {
   fullName: string;
-  language?: string;
   submissions: {
     testTitle: string;
     topic: string;
@@ -73,12 +42,45 @@ function buildPrompt(userData: {
     courseTitle: string;
     progressPercent: number;
   }[];
-}): string {
-  const language = userData.language ?? 'English';
+}
 
+/**
+ * Asks the model for one analysis in English AND one in Ukrainian, returned
+ * together in a single JSON envelope so we save both versions to the database
+ * and the frontend can pick by locale without re-querying. Topic / action
+ * keys must remain identical between languages — they're translations of the
+ * same analysis, not two independent runs.
+ */
+export async function generateRecommendations(
+  userData: UserData,
+): Promise<AiAnalysisBilingual> {
+  const prompt = buildPrompt(userData);
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-5',
+    max_tokens: 2048,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+
+  // Strip markdown code fences if present
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean) as AiAnalysisBilingual;
+
+  if (!parsed.en || !parsed.uk) {
+    throw new Error('AI response missing en/uk fields');
+  }
+
+  return parsed;
+}
+
+function buildPrompt(userData: UserData): string {
   return `
 You are an educational AI assistant analyzing a student's performance on a math learning platform.
-Respond entirely in ${language}. All text values in the JSON must be written in ${language}.
 
 Student: ${userData.fullName}
 
@@ -94,19 +96,34 @@ ${userData.progress
   .map((p) => `- "${p.courseTitle}": ${p.progressPercent.toFixed(1)}% complete`)
   .join('\n')}
 
-Analyze this student's performance and return ONLY a JSON object with no markdown, no explanation, just raw JSON in this exact structure:
+Analyze this student's performance and return ONLY a JSON object with no markdown, no explanation, just raw JSON.
+
+Produce TWO versions of the same analysis: one in English under the "en" key, and an exact translation in Ukrainian under the "uk" key. Both must use the same structure shown below. Translate every text value (including topic names and priority reasoning) — keep "priority" enum values ("HIGH" / "MEDIUM" / "LOW") in English in BOTH versions, since the frontend localizes them itself.
+
+Exact structure:
 {
-  "overallPerformance": "brief overall assessment string",
-  "weakAreas": [
-    { "topic": "topic name", "reason": "why this is a weak area" }
-  ],
-  "strongAreas": [
-    { "topic": "topic name", "reason": "why this is a strong area" }
-  ],
-  "recommendations": [
-    { "priority": "HIGH|MEDIUM|LOW", "action": "specific action to take", "reason": "why this is recommended" }
-  ],
-  "nextSteps": ["step 1", "step 2", "step 3"]
+  "en": {
+    "overallPerformance": "brief overall assessment string",
+    "weakAreas": [
+      { "topic": "topic name", "reason": "why this is a weak area" }
+    ],
+    "strongAreas": [
+      { "topic": "topic name", "reason": "why this is a strong area" }
+    ],
+    "recommendations": [
+      { "priority": "HIGH|MEDIUM|LOW", "action": "specific action to take", "reason": "why this is recommended" }
+    ],
+    "nextSteps": ["step 1", "step 2", "step 3"]
+  },
+  "uk": {
+    "overallPerformance": "...",
+    "weakAreas": [ { "topic": "...", "reason": "..." } ],
+    "strongAreas": [ { "topic": "...", "reason": "..." } ],
+    "recommendations": [
+      { "priority": "HIGH|MEDIUM|LOW", "action": "...", "reason": "..." }
+    ],
+    "nextSteps": ["...", "...", "..."]
+  }
 }
 `.trim();
 }

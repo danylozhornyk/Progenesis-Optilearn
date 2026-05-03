@@ -22,7 +22,7 @@ export function getLessonById(id: string) {
   return prisma.lesson.findUnique({
     where: { id },
     include: {
-      course: { select: { id: true, title: true, titleUk: true } },
+      course: { select: { id: true, title: true, titleUk: true, status: true } },
       tests: {
         select: {
           id: true,
@@ -44,7 +44,7 @@ export function getLessonByIdPublic(id: string) {
   return prisma.lesson.findUnique({
     where: { id },
     include: {
-      course: { select: { id: true, title: true, titleUk: true } },
+      course: { select: { id: true, title: true, titleUk: true, status: true } },
       prerequisite: { select: { id: true, title: true, titleUk: true } },
     },
   });
@@ -53,6 +53,7 @@ export function getLessonByIdPublic(id: string) {
 export async function createLesson(data: {
   courseId: string;
   title: string;
+  titleUk?: string | null;
   orderIndex: number;
   content?: object[];
   estimatedMinutes?: number;
@@ -66,8 +67,10 @@ export async function createLesson(data: {
 
 export async function updateLesson(id: string, data: {
   title?: string;
+  titleUk?: string | null;
   content?: object[];
-  estimatedMinutes?: number;
+  contentUk?: object[] | null;
+  estimatedMinutes?: number | null;
   isMandatory?: boolean;
   orderIndex?: number;
 }) {

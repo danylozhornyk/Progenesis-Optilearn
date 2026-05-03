@@ -67,6 +67,19 @@
       "checkEmail": "Check your email",
       "checkEmailDescription": "If an account with that email exists, we've sent a password reset link. The link expires in 1 hour."
     },
+    "passwordErrors": {
+      "PASSWORD_TOO_SHORT": "Password must be at least 8 characters.",
+      "PASSWORD_NO_UPPERCASE": "Password must contain at least one uppercase letter.",
+      "PASSWORD_NO_LOWERCASE": "Password must contain at least one lowercase letter.",
+      "PASSWORD_NO_DIGIT": "Password must contain at least one number.",
+      "PASSWORD_NO_SPECIAL": "Password must contain at least one special character (!@#$%^&* …)."
+    },
+    "passwordStrength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
     "resetPassword": {
       "title": "Reset password",
       "subtitle": "Enter your new password below",
@@ -111,6 +124,9 @@
     "enrolledOn": "Enrolled · {percent}% complete",
     "leaveCourse": "Leave course",
     "leaveCourseConfirm": "Remove your progress for this course? This cannot be undone.",
+    "draftBadge": "Draft",
+    "draftCourseTitle": "This course is not published yet",
+    "draftCourseDescription": "This course is currently a draft and is not available to learners. Check back later or contact the administrator.",
     "lessonsTitle": "Lessons",
     "difficulty": {
       "BEGINNER": "Beginner",
@@ -141,7 +157,12 @@
     "yourBestResult": "Your result",
     "passedOn": "Passed on {date}",
     "noRetakes": "Retakes not allowed",
-    "loadingResult": "Loading your result…"
+    "loadingResult": "Loading your result…",
+    "getHint": "Need a hint?",
+    "hintLabel": "Hint",
+    "hintLoading": "Loading hint…",
+    "strongerHint": "Still stuck — give me a stronger hint",
+    "hintMaxed": "No stronger hint available."
   },
   "lesson": {
     "theory": "Theory",
@@ -166,6 +187,149 @@
     "allPassed": "All tests passed",
     "completed": "Completed"
   },
+  "achievements": {
+    "unlocked": "Achievement unlocked",
+    "points": "+{n} pts"
+  },
+  "admin": {
+    "nav": {
+      "courses": "Courses",
+      "lessons": "Lessons",
+      "tests": "Tests",
+      "users": "Users",
+      "stats": "Statistics"
+    },
+    "lessons": {
+      "title": "Lessons",
+      "subtitle": "Manage lessons across all courses.",
+      "empty": "No lessons match the current filter.",
+      "add": "Add lesson",
+      "addTitle": "New lesson",
+      "editTitle": "Edit lesson",
+      "deleteConfirm": "Delete the lesson \"{title}\"? Its tests and submissions will also be removed.",
+      "filterCourse": "Course:",
+      "allCourses": "All courses",
+      "courseRequired": "Please pick a course.",
+      "cannotChangeCourse": "Moving a lesson to a different course is not supported here.",
+      "pickCourse": "— pick a course —",
+      "colTitle": "Title",
+      "colCourse": "Course",
+      "colMandatory": "Type",
+      "colTests": "Tests",
+      "colMinutes": "Minutes",
+      "colActions": "Actions",
+      "fCourse": "Course",
+      "fTitle": "Title (EN)",
+      "fTitleUk": "Title (UK)",
+      "fOrder": "Order",
+      "fMinutes": "Est. min",
+      "fMandatoryShort": "Required",
+      "editStructure": "Edit structure"
+    },
+    "tests": {
+      "title": "Tests",
+      "subtitle": "Manage tests and their connection to lessons and courses.",
+      "empty": "No tests match the current filter.",
+      "add": "Add test",
+      "addTitle": "New test",
+      "editTitle": "Edit test",
+      "deleteConfirm": "Delete the test \"{title}\"? All submissions for this test will be lost.",
+      "filterCourse": "Course:",
+      "lessonRequired": "Please pick a lesson.",
+      "cannotChangeLesson": "Moving a test to a different lesson is not supported here.",
+      "pickLesson": "— pick a lesson —",
+      "colTitle": "Title",
+      "colLesson": "Lesson",
+      "colCourse": "Course",
+      "colTasks": "Tasks",
+      "colSubmissions": "Subs.",
+      "colPass": "Pass %",
+      "colTime": "Time",
+      "colActions": "Actions",
+      "fLesson": "Lesson (course → lesson)",
+      "fTitle": "Title (EN)",
+      "fTitleUk": "Title (UK)",
+      "fDescription": "Description (EN)",
+      "fDescriptionUk": "Description (UK)",
+      "fTimeLimit": "Time limit (min)",
+      "fMaxAttempts": "Max attempts",
+      "fPassingScore": "Passing score (%)",
+      "fShuffle": "Shuffle",
+      "fShuffleHint": "Shuffle question order",
+      "editStructure": "Edit structure"
+    },
+    "courses": {
+      "title": "Courses",
+      "subtitle": "Create, edit and remove courses on the platform.",
+      "empty": "No courses yet.",
+      "add": "Add course",
+      "addTitle": "New course",
+      "editTitle": "Edit course",
+      "deleteConfirm": "Delete the course \"{title}\"? This will remove all its lessons, tests and submissions.",
+      "colTitle": "Title",
+      "colDiscipline": "Discipline",
+      "colDifficulty": "Difficulty",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "fTitle": "Title (EN)",
+      "fTitleUk": "Title (UK)",
+      "fDescription": "Description (EN)",
+      "fDescriptionUk": "Description (UK)",
+      "fDiscipline": "Discipline (EN)",
+      "fDisciplineUk": "Discipline (UK)",
+      "fDifficulty": "Difficulty",
+      "draftNotice": "The course will be saved as a draft and hidden from learners. Use the Publish button in the list to make it visible.",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "publishing": "Saving…"
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Manage accounts, roles and access.",
+      "empty": "No users yet.",
+      "add": "Add user",
+      "addTitle": "New user",
+      "editTitle": "Edit user",
+      "deleteConfirm": "Delete user \"{name}\"? This cannot be undone.",
+      "cannotDeleteSelf": "You cannot delete your own account.",
+      "emailPasswordRequired": "Email and password are required.",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colVerified": "Verified",
+      "colCreated": "Created",
+      "colActions": "Actions",
+      "fName": "Full name",
+      "fEmail": "Email",
+      "fPassword": "Password",
+      "fRole": "Role"
+    },
+    "stats": {
+      "title": "Statistics",
+      "subtitle": "Platform-wide activity at a glance.",
+      "kpiUsers": "Total users",
+      "kpiUsersHint": "+{n} new in the last 7 days",
+      "kpiCourses": "Total courses",
+      "kpiCoursesHint": "{n} published",
+      "kpiSubmissions": "Total submissions",
+      "kpiSubmissionsHint": "{n} in the last 24h",
+      "kpiPassRate": "Pass rate",
+      "kpiPassRateHint": "{p} passed / {f} failed",
+      "chartTitle": "Submissions per day",
+      "chartSubtitle": "Stacked: green = passed, red = failed",
+      "range7": "Last 7 days",
+      "range30": "Last 30 days",
+      "legendPassed": "Passed",
+      "legendFailed": "Failed",
+      "tooltipPassed": "{n} passed",
+      "tooltipFailed": "{n} failed",
+      "topUsers": "Top users by points",
+      "courseLeaderboard": "Course completion",
+      "noData": "No data yet.",
+      "pts": "pts",
+      "generatedAt": "Generated at {time}"
+    }
+  },
   "faq": {
     "title": "FAQ",
     "subtitle": "Frequently asked questions about Progenesis"
@@ -188,14 +352,15 @@
     "avatarError": "Failed to upload photo",
     "nameError": "Failed to save name",
     "stats": {
-      "courses": "Courses enrolled",
-      "tests": "Tests completed",
-      "achievements": "Achievements"
+      "courses": "Courses finished",
+      "tests": "Tests passed",
+      "achievements": "Achievement points"
     },
     "tabs": {
       "personal": "Personal",
       "progress": "Progress",
-      "achievements": "Achievements"
+      "achievements": "Achievements",
+      "recommendations": "Recommendations"
     },
     "personal": {
       "accountSection": "Account information",
@@ -249,12 +414,35 @@
       "earnedOn": "Earned {date}",
       "category": "Category",
       "points": "{n} pts",
+      "pointsSummary": "{earned} / {total} pts",
       "howTo": "How to earn",
       "categoryLabel": {
         "PROGRESS": "Progress",
         "SKILL": "Skill",
         "STREAK": "Streak",
         "SOCIAL": "Social"
+      }
+    },
+    "recommendations": {
+      "title": "Recommendations",
+      "subtitle": "AI-powered analysis of your learning so far",
+      "generateTitle": "Generate a new analysis",
+      "generateHint": "We'll review your recent submissions and progress (one analysis per 30 minutes).",
+      "generate": "Generate",
+      "generating": "Analyzing…",
+      "empty": "No recommendations yet. Click Generate to get your first analysis.",
+      "latest": "Latest analysis",
+      "archived": "Previous analysis",
+      "newBadge": "NEW",
+      "overall": "Overall performance",
+      "strongAreas": "Strong areas",
+      "weakAreas": "Weak areas",
+      "actions": "Recommended actions",
+      "nextSteps": "Next steps",
+      "priority": {
+        "HIGH": "High priority",
+        "MEDIUM": "Medium",
+        "LOW": "Low"
       }
     }
   }

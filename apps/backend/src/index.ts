@@ -21,6 +21,7 @@ import usersRouter from './routes/users.routes';
 import achievementsRouter from './routes/achievements.routes';
 import recommendationsRouter from './routes/recommendations.routes';
 import uploadsRouter from './routes/uploads.routes';
+import adminRouter from './routes/admin.routes';
 import { initStorage } from './storage';
 import { UPLOADS_DIR } from './storage/local.storage';
 
@@ -103,6 +104,7 @@ app.use('/users', usersRouter);
 app.use('/achievements', achievementsRouter);
 app.use('/recommendations', recommendationsRouter);
 app.use('/uploads', uploadsRouter);
+app.use('/admin', adminRouter);
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/health', (_req, res) => {

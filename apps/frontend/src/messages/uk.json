@@ -67,6 +67,19 @@
       "checkEmail": "Перевірте пошту",
       "checkEmailDescription": "Якщо акаунт з таким email існує, ми надіслали посилання для скидання пароля. Посилання діє 1 годину."
     },
+    "passwordErrors": {
+      "PASSWORD_TOO_SHORT": "Пароль має містити щонайменше 8 символів.",
+      "PASSWORD_NO_UPPERCASE": "Пароль має містити хоча б одну велику літеру.",
+      "PASSWORD_NO_LOWERCASE": "Пароль має містити хоча б одну малу літеру.",
+      "PASSWORD_NO_DIGIT": "Пароль має містити хоча б одну цифру.",
+      "PASSWORD_NO_SPECIAL": "Пароль має містити хоча б один спеціальний символ (!@#$%^&* …)."
+    },
+    "passwordStrength": {
+      "weak": "Слабкий",
+      "fair": "Посередній",
+      "good": "Хороший",
+      "strong": "Надійний"
+    },
     "resetPassword": {
       "title": "Скинути пароль",
       "subtitle": "Введіть новий пароль нижче",
@@ -111,6 +124,9 @@
     "enrolledOn": "Записано · {percent}% завершено",
     "leaveCourse": "Залишити курс",
     "leaveCourseConfirm": "Видалити ваш прогрес з цього курсу? Цю дію не можна скасувати.",
+    "draftBadge": "Чернетка",
+    "draftCourseTitle": "Цей курс ще не опубліковано",
+    "draftCourseDescription": "Цей курс наразі є чернеткою і недоступний для учнів. Поверніться пізніше або зверніться до адміністратора.",
     "lessonsTitle": "Уроки",
     "difficulty": {
       "BEGINNER": "Початківець",
@@ -141,7 +157,12 @@
     "yourBestResult": "Ваш результат",
     "passedOn": "Пройдено {date}",
     "noRetakes": "Повторне проходження заборонено",
-    "loadingResult": "Завантаження результату…"
+    "loadingResult": "Завантаження результату…",
+    "getHint": "Потрібна підказка?",
+    "hintLabel": "Підказка",
+    "hintLoading": "Завантаження підказки…",
+    "strongerHint": "Не допомогло — дайте сильнішу підказку",
+    "hintMaxed": "Сильніших підказок більше немає."
   },
   "lesson": {
     "theory": "Теорія",
@@ -166,6 +187,149 @@
     "allPassed": "Усі тести пройдено",
     "completed": "Завершено"
   },
+  "achievements": {
+    "unlocked": "Досягнення отримано",
+    "points": "+{n} балів"
+  },
+  "admin": {
+    "nav": {
+      "courses": "Курси",
+      "lessons": "Уроки",
+      "tests": "Тести",
+      "users": "Користувачі",
+      "stats": "Статистика"
+    },
+    "lessons": {
+      "title": "Уроки",
+      "subtitle": "Керуйте уроками всіх курсів.",
+      "empty": "За поточним фільтром уроків немає.",
+      "add": "Додати урок",
+      "addTitle": "Новий урок",
+      "editTitle": "Редагувати урок",
+      "deleteConfirm": "Видалити урок «{title}»? Його тести та результати буде видалено.",
+      "filterCourse": "Курс:",
+      "allCourses": "Усі курси",
+      "courseRequired": "Будь ласка, оберіть курс.",
+      "cannotChangeCourse": "Перенесення уроку до іншого курсу тут не підтримується.",
+      "pickCourse": "— оберіть курс —",
+      "colTitle": "Назва",
+      "colCourse": "Курс",
+      "colMandatory": "Тип",
+      "colTests": "Тести",
+      "colMinutes": "Хвилин",
+      "colActions": "Дії",
+      "fCourse": "Курс",
+      "fTitle": "Назва (EN)",
+      "fTitleUk": "Назва (UK)",
+      "fOrder": "Порядок",
+      "fMinutes": "Хв.",
+      "fMandatoryShort": "Обов.",
+      "editStructure": "Редагувати структуру"
+    },
+    "tests": {
+      "title": "Тести",
+      "subtitle": "Керуйте тестами та їх зв'язком з уроками й курсами.",
+      "empty": "За поточним фільтром тестів немає.",
+      "add": "Додати тест",
+      "addTitle": "Новий тест",
+      "editTitle": "Редагувати тест",
+      "deleteConfirm": "Видалити тест «{title}»? Усі відповіді на нього буде втрачено.",
+      "filterCourse": "Курс:",
+      "lessonRequired": "Будь ласка, оберіть урок.",
+      "cannotChangeLesson": "Перенесення тесту до іншого уроку тут не підтримується.",
+      "pickLesson": "— оберіть урок —",
+      "colTitle": "Назва",
+      "colLesson": "Урок",
+      "colCourse": "Курс",
+      "colTasks": "Завдання",
+      "colSubmissions": "Спроб",
+      "colPass": "Прохід %",
+      "colTime": "Час",
+      "colActions": "Дії",
+      "fLesson": "Урок (курс → урок)",
+      "fTitle": "Назва (EN)",
+      "fTitleUk": "Назва (UK)",
+      "fDescription": "Опис (EN)",
+      "fDescriptionUk": "Опис (UK)",
+      "fTimeLimit": "Ліміт часу (хв)",
+      "fMaxAttempts": "Макс. спроб",
+      "fPassingScore": "Прохідний бал (%)",
+      "fShuffle": "Перемішування",
+      "fShuffleHint": "Перемішувати порядок запитань",
+      "editStructure": "Редагувати структуру"
+    },
+    "courses": {
+      "title": "Курси",
+      "subtitle": "Створюйте, редагуйте та видаляйте курси платформи.",
+      "empty": "Курсів ще немає.",
+      "add": "Додати курс",
+      "addTitle": "Новий курс",
+      "editTitle": "Редагувати курс",
+      "deleteConfirm": "Видалити курс «{title}»? Усі його уроки, тести та результати буде видалено.",
+      "colTitle": "Назва",
+      "colDiscipline": "Дисципліна",
+      "colDifficulty": "Складність",
+      "colStatus": "Статус",
+      "colActions": "Дії",
+      "fTitle": "Назва (EN)",
+      "fTitleUk": "Назва (UK)",
+      "fDescription": "Опис (EN)",
+      "fDescriptionUk": "Опис (UK)",
+      "fDiscipline": "Дисципліна (EN)",
+      "fDisciplineUk": "Дисципліна (UK)",
+      "fDifficulty": "Складність",
+      "draftNotice": "Курс буде збережено як чернетку та прихований від учнів. Натисніть «Опублікувати» у списку, щоб зробити його видимим.",
+      "publish": "Опублікувати",
+      "unpublish": "Зняти з публікації",
+      "publishing": "Збереження…"
+    },
+    "users": {
+      "title": "Користувачі",
+      "subtitle": "Керуйте акаунтами, ролями та доступом.",
+      "empty": "Користувачів ще немає.",
+      "add": "Додати користувача",
+      "addTitle": "Новий користувач",
+      "editTitle": "Редагувати користувача",
+      "deleteConfirm": "Видалити користувача «{name}»? Цю дію не можна скасувати.",
+      "cannotDeleteSelf": "Ви не можете видалити власний акаунт.",
+      "emailPasswordRequired": "Email і пароль обов'язкові.",
+      "colName": "Ім'я",
+      "colEmail": "Email",
+      "colRole": "Роль",
+      "colVerified": "Підтверджено",
+      "colCreated": "Створено",
+      "colActions": "Дії",
+      "fName": "Повне ім'я",
+      "fEmail": "Email",
+      "fPassword": "Пароль",
+      "fRole": "Роль"
+    },
+    "stats": {
+      "title": "Статистика",
+      "subtitle": "Активність платформи з першого погляду.",
+      "kpiUsers": "Усього користувачів",
+      "kpiUsersHint": "+{n} нових за останні 7 днів",
+      "kpiCourses": "Усього курсів",
+      "kpiCoursesHint": "{n} опубліковано",
+      "kpiSubmissions": "Усього спроб",
+      "kpiSubmissionsHint": "{n} за останні 24 год",
+      "kpiPassRate": "Коеф. успішності",
+      "kpiPassRateHint": "{p} пройдено / {f} не пройдено",
+      "chartTitle": "Спроби по днях",
+      "chartSubtitle": "Стовпці: зелений — пройдено, червоний — не пройдено",
+      "range7": "Останні 7 днів",
+      "range30": "Останні 30 днів",
+      "legendPassed": "Пройдено",
+      "legendFailed": "Не пройдено",
+      "tooltipPassed": "{n} пройдено",
+      "tooltipFailed": "{n} не пройдено",
+      "topUsers": "Топ користувачів за балами",
+      "courseLeaderboard": "Завершення курсів",
+      "noData": "Даних ще немає.",
+      "pts": "балів",
+      "generatedAt": "Згенеровано {time}"
+    }
+  },
   "faq": {
     "title": "FAQ",
     "subtitle": "Поширені запитання про Progenesis"
@@ -188,14 +352,15 @@
     "avatarError": "Не вдалося завантажити фото",
     "nameError": "Не вдалося зберегти ім'я",
     "stats": {
-      "courses": "Зараховано курсів",
-      "tests": "Завершено тестів",
-      "achievements": "Досягнення"
+      "courses": "Курсів завершено",
+      "tests": "Тестів пройдено",
+      "achievements": "Бали досягнень"
     },
     "tabs": {
       "personal": "Особисте",
       "progress": "Прогрес",
-      "achievements": "Досягнення"
+      "achievements": "Досягнення",
+      "recommendations": "Рекомендації"
     },
     "personal": {
       "accountSection": "Інформація акаунту",
@@ -249,12 +414,35 @@
       "earnedOn": "Отримано {date}",
       "category": "Категорія",
       "points": "{n} балів",
+      "pointsSummary": "{earned} / {total} балів",
       "howTo": "Як отримати",
       "categoryLabel": {
         "PROGRESS": "Прогрес",
         "SKILL": "Майстерність",
         "STREAK": "Серія",
         "SOCIAL": "Соціальні"
+      }
+    },
+    "recommendations": {
+      "title": "Рекомендації",
+      "subtitle": "Аналіз вашого навчання за допомогою ШІ",
+      "generateTitle": "Створити новий аналіз",
+      "generateHint": "Ми проаналізуємо ваші нещодавні відповіді та прогрес (один аналіз на 30 хвилин).",
+      "generate": "Створити",
+      "generating": "Аналізуємо…",
+      "empty": "Рекомендацій ще немає. Натисніть «Створити», щоб отримати перший аналіз.",
+      "latest": "Останній аналіз",
+      "archived": "Попередній аналіз",
+      "newBadge": "НОВЕ",
+      "overall": "Загальна оцінка",
+      "strongAreas": "Сильні сторони",
+      "weakAreas": "Слабкі сторони",
+      "actions": "Рекомендовані дії",
+      "nextSteps": "Наступні кроки",
+      "priority": {
+        "HIGH": "Високий пріоритет",
+        "MEDIUM": "Середній",
+        "LOW": "Низький"
       }
     }
   }

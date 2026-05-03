@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useT } from '@/lib/i18n';
@@ -18,14 +18,28 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  PasswordStrengthMeter,
+  isPasswordErrorCode,
+} from '@/components/PasswordStrengthMeter';
 
-const schema = z.object({
-  newPassword: z.string().min(8),
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const passwordRules = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
+
+const schema = z
+  .object({
+    newPassword: passwordRules,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type ResetForm = z.infer<typeof schema>;
 
@@ -40,6 +54,8 @@ export default function ResetPasswordPage() {
     resolver: zodResolver(schema),
     defaultValues: { newPassword: '', confirmPassword: '' },
   });
+
+  const newPasswordValue = useWatch({ control: form.control, name: 'newPassword' });
 
   if (!token) {
     return (
@@ -70,7 +86,8 @@ export default function ResetPasswordPage() {
       await api.post('/auth/reset-password', { token, newPassword: values.newPassword });
       router.push('/login');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'));
+      const msg = err instanceof Error ? err.message : t('common.error');
+      setError(isPasswordErrorCode(msg) ? t(`auth.passwordErrors.${msg}`) : msg);
     }
   }
 
@@ -102,6 +119,7 @@ export default function ResetPasswordPage() {
                     {...field}
                   />
                 </FormControl>
+                <PasswordStrengthMeter password={newPasswordValue} />
                 <FormMessage />
               </FormItem>
             )}

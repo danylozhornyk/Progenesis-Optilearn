@@ -43,14 +43,19 @@ export async function getCourseById(id: string) {
 export async function createCourse(data: {
   authorId: string;
   title: string;
+  titleUk?: string | null;
   description: string;
+  descriptionUk?: string | null;
   discipline: string;
+  disciplineUk?: string | null;
   difficulty: string;
-  status?: string;
-  isVisible?: boolean;
   coverImageUrl?: string;
 }) {
-  const course = await prisma.course.create({ data });
+  // New courses always start as DRAFT and are hidden from learners until
+  // an admin explicitly publishes them via PATCH /courses/:id.
+  const course = await prisma.course.create({
+    data: { ...data, status: 'DRAFT', isVisible: false },
+  });
   await invalidateCoursesCache();
   return course;
 }

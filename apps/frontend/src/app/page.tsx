@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useT } from '@/lib/i18n';
@@ -10,6 +12,14 @@ import { Button } from '@/components/ui/button';
 export default function LandingPage() {
   const { t } = useT();
   const { user } = useAuth();
+  const router = useRouter();
+
+  // Admins skip the landing page entirely and go straight to the control panel
+  useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      router.replace('/admin/stats');
+    }
+  }, [user, router]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background bg-subtle-gradient">
@@ -42,7 +52,9 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-3 flex-wrap">
             {user ? (
               <Button size="lg" asChild className="shadow-soft">
-                <Link href="/profile">{t('common.dashboard')}</Link>
+                <Link href={user.role === 'ADMIN' ? '/admin/stats' : '/profile'}>
+                  {t('common.dashboard')}
+                </Link>
               </Button>
             ) : (
               <>

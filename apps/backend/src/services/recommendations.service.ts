@@ -1,3 +1,4 @@
+import { Prisma } from '../../generated/prisma';
 import { prisma } from '../db/prisma';
 import { generateRecommendations } from '../ai/recommendations.ai';
 
@@ -22,7 +23,7 @@ export async function generateAndSaveRecommendation(userId: string) {
   const [user, submissions, progress] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
-      select: { fullName: true, preferences: true },
+      select: { fullName: true },
     }),
     prisma.testSubmission.findMany({
       where: { userId },
@@ -51,14 +52,9 @@ export async function generateAndSaveRecommendation(userId: string) {
 
   if (!user) throw new Error('User not found');
 
-  // ── Extract language from user preferences ────────────────────
-  const preferences = user.preferences as { locale?: string } | null;
-  const language = localeToLanguage(preferences?.locale);
-
   // ── Shape data for the AI prompt ──────────────────────────────
   const userData = {
     fullName: user.fullName,
-    language,
     submissions: submissions.map((s) => ({
       testTitle: s.test.title,
       topic: s.test.lesson.course.discipline,
@@ -73,14 +69,17 @@ export async function generateAndSaveRecommendation(userId: string) {
     })),
   };
 
-  // ── Call the AI ───────────────────────────────────────────────
-  const analysis = await generateRecommendations(userData);
+  // ── Call the AI (returns BOTH English and Ukrainian) ──────────
+  const bilingual = await generateRecommendations(userData);
 
-  // ── Save to DB ────────────────────────────────────────────────
+  // ── Save both language versions to DB ─────────────────────────
+  // Cast through unknown → Prisma.InputJsonValue: AiAnalysis is shaped JSON
+  // but TS can't prove it satisfies Prisma's recursive InputJsonValue type.
   const recommendation = await prisma.aiRecommendation.create({
     data: {
       userId,
-      analysis,
+      analysis: bilingual.en as unknown as Prisma.InputJsonValue,
+      analysisUk: bilingual.uk as unknown as Prisma.InputJsonValue,
     },
   });
 
@@ -99,19 +98,4 @@ export function getLatestRecommendation(userId: string) {
     where: { userId },
     orderBy: { createdAt: 'desc' },
   });
-}
-
-// ── Locale to language name mapping ──────────────────────────
-function localeToLanguage(locale?: string): string {
-  const map: Record<string, string> = {
-    uk: 'Ukrainian',
-    en: 'English',
-    de: 'German',
-    fr: 'French',
-    pl: 'Polish',
-    es: 'Spanish',
-  };
-
-  if (!locale) return 'English';
-  return map[locale] ?? 'English';
 }
