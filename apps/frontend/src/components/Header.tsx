@@ -66,7 +66,21 @@ export default function Header() {
         {/* Logo + primary nav */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-5 h-5 bg-foreground rounded-sm transition-transform group-hover:scale-110" />
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-foreground shrink-0 transition-transform group-hover:scale-110"
+              aria-hidden="true"
+            >
+              <line x1="3.5" y1="18.5" x2="11" y2="10.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+              <line x1="11" y1="10.5" x2="18.5" y2="3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+              <circle cx="3.5" cy="18.5" r="3.25" fill="currentColor"/>
+              <circle cx="11" cy="10.5" r="2.25" fill="currentColor"/>
+              <circle cx="18.5" cy="3.5" r="1.75" fill="currentColor"/>
+            </svg>
             <span className="font-semibold text-foreground tracking-tight">
               {t('common.appName')}
             </span>

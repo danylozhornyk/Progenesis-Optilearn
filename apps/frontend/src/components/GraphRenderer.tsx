@@ -119,7 +119,6 @@ export default function GraphRenderer({
   }
 
   function edgeLabel(e: GraphEdge): string | null {
-    if (e.label != null && e.label !== '') return String(e.label);
     if (e.weight != null && e.weight !== '') return String(e.weight);
     return null;
   }
@@ -182,6 +181,49 @@ export default function GraphRenderer({
               );
             }
 
+            // Detect bidirectional parallel edges (A→B and B→A both exist)
+            const isParallel = directed && edges.some(
+              (e2) => e2.source === edge.target && e2.target === edge.source,
+            );
+
+            if (isParallel) {
+              // Curved quadratic bezier arc with perpendicular offset
+              const CURVE_OFFSET = vertexRadius * 1.5;
+              const dx = to.x - from.x, dy = to.y - from.y;
+              const edgeLen = Math.hypot(dx, dy) || 1;
+              const ux = dx / edgeLen, uy = dy / edgeLen;
+              const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
+              const cpx = mx - uy * CURVE_OFFSET, cpy = my + ux * CURVE_OFFSET;
+              // Start: boundary of `from` towards control point
+              const sd = { x: cpx - from.x, y: cpy - from.y };
+              const sl = Math.hypot(sd.x, sd.y) || 1;
+              const x1 = from.x + (sd.x / sl) * vertexRadius;
+              const y1 = from.y + (sd.y / sl) * vertexRadius;
+              // End: boundary of `to` from control point direction
+              const ed2 = { x: to.x - cpx, y: to.y - cpy };
+              const el = Math.hypot(ed2.x, ed2.y) || 1;
+              const x2 = to.x - (ed2.x / el) * (vertexRadius + 2);
+              const y2 = to.y - (ed2.y / el) * (vertexRadius + 2);
+              const d = `M ${x1} ${y1} Q ${cpx} ${cpy} ${x2} ${y2}`;
+              const lx = 0.25 * x1 + 0.5 * cpx + 0.25 * x2;
+              const ly = 0.25 * y1 + 0.5 * cpy + 0.25 * y2;
+              const label = edgeLabel(edge);
+              return (
+                <g key={`e-${i}`}>
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={EDGE_COLOR}
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                    markerEnd="url(#graph-arrow)"
+                  />
+                  {showLabel && label && <EdgeLabel x={lx} y={ly} text={label} />}
+                </g>
+              );
+            }
+
+            // Straight edge (default)
             // For directed edges, shorten so the arrowhead lands on the circle.
             const end = directed
               ? endpointOnCircle(from.x, from.y, to.x, to.y, vertexRadius + 2)

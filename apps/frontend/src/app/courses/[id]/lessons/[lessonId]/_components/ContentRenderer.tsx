@@ -1,8 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import katex from 'katex';
+import { useT } from '@/lib/i18n';
+import { api } from '@/lib/api';
+import GraphRenderer, { GraphData } from '@/components/GraphRenderer';
 import type { ContentBlock } from './types';
-import { ChartSvg, GraphSvg } from '@/app/(app)/admin/lessons/_components/LessonStructureEditor';
+import { ChartSvg } from '@/app/(app)/admin/lessons/_components/LessonStructureEditor';
 
 /**
  * Renders one display-mode KaTeX equation; falls back to a <code> block when
@@ -20,6 +24,45 @@ function LatexBlock({ source }: { source: string }) {
       className="my-4 overflow-x-auto text-center py-3"
       dangerouslySetInnerHTML={{ __html: html }}
     />
+  );
+}
+
+/**
+ * Lazy graph renderer — fetches /graphs/:id on mount and renders the result
+ * via GraphRenderer (the same component the test page uses for Task graphs).
+ */
+function GraphBlockRenderer({ graphId }: { graphId: string }) {
+  const { t, locale } = useT();
+  const [graph, setGraph] = useState<(GraphData & { title: string | null; titleUk: string | null }) | null>(null);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    if (!graphId) { setMissing(true); return; }
+    api.get<GraphData & { title: string | null; titleUk: string | null }>(`/graphs/${graphId}`)
+      .then(setGraph)
+      .catch(() => setMissing(true));
+  }, [graphId]);
+
+  if (missing) return null;
+  if (!graph) {
+    return (
+      <div
+        className="w-full rounded-lg border border-border bg-muted/40 flex items-center justify-center text-xs text-muted-foreground"
+        style={{ height: 200 }}
+      >
+        {t('common.loading')}
+      </div>
+    );
+  }
+
+  const title = (locale === 'uk' && graph.titleUk) ? graph.titleUk : graph.title;
+  return (
+    <div className="space-y-1.5 my-2">
+      <GraphRenderer graph={graph} height={280} />
+      {title && (
+        <p className="text-[11px] text-muted-foreground italic text-center">{title}</p>
+      )}
+    </div>
   );
 }
 
@@ -59,11 +102,7 @@ export function ContentRenderer({ blocks }: { blocks: ContentBlock[] }) {
             );
 
           case 'graph':
-            return (
-              <div key={i} className="my-2">
-                <GraphSvg block={block} />
-              </div>
-            );
+            return <GraphBlockRenderer key={i} graphId={block.graphId} />;
 
           default:
             // 'text' and any unknown future types

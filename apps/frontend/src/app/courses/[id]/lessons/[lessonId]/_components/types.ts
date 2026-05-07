@@ -10,7 +10,9 @@ export type ContentBlock =
   | { type: 'latex'; value: string }
   | { type: 'image'; url: string; caption?: string }
   | { type: 'chart'; chartType: 'bar' | 'line'; title?: string; labels: string[]; data: number[]; color: string }
-  | { type: 'graph'; title?: string; directed: boolean; vertices: GraphVertex[]; edges: GraphEdge[] };
+  // Graph blocks reference a Graph DB row by id; the renderer fetches the
+  // row to pull vertices/edges/title at display time.
+  | { type: 'graph'; graphId: string };
 
 export interface Lesson {
   id: string;

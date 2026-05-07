@@ -5,6 +5,9 @@ import { AuthProvider } from '@/lib/auth';
 export const metadata: Metadata = {
   title: 'Progenesis',
   description: 'Interactive learning for mathematical disciplines',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

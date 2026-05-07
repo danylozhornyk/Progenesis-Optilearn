@@ -16,6 +16,8 @@ Thumbs.db
 coverage/
 .turbo/
 *.http
+CLAUDE.md
+PROJECT_MAP.md
 # Prisma generated client
 apps/backend/generated/
 apps/backend/prisma/migrations

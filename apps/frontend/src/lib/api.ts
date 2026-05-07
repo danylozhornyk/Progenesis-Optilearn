@@ -7,10 +7,14 @@ async function request<T>(
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  // Don't set Content-Type for FormData — the browser must set it so it can
+  // include the multipart boundary string automatically.
+  const isFormData = options.body instanceof FormData;
+
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -34,4 +38,8 @@ export const api = {
   put: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  /** Upload a file via multipart/form-data. The FormData must already contain
+   *  the file(s); the correct Content-Type boundary is set automatically. */
+  upload: <T>(path: string, formData: FormData) =>
+    request<T>(path, { method: 'POST', body: formData }),
 };

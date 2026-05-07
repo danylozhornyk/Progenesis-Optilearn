@@ -21,7 +21,8 @@ export function getGraphById(id: string) {
 
 export function createGraph(data: {
   userId?: string;
-  title?: string;
+  title?: string | null;
+  titleUk?: string | null;
   graphType: GraphType;
   vertices?: object[];
   edges?: object[];
@@ -41,7 +42,9 @@ export function createGraph(data: {
 }
 
 export function updateGraph(id: string, data: {
-  title?: string;
+  title?: string | null;
+  titleUk?: string | null;
+  graphType?: GraphType;
   vertices?: object[];
   edges?: object[];
 }) {
