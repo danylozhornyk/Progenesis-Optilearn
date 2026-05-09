@@ -22,11 +22,11 @@ export function CourseHeader({ course }: { course: Course }) {
     <>
       {/* Cover image */}
       {course.coverImageUrl && (
-        <div className="w-full h-56 rounded-lg overflow-hidden bg-muted">
+        <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted flex items-center justify-center">
           <img
             src={course.coverImageUrl}
             alt={title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
       )}

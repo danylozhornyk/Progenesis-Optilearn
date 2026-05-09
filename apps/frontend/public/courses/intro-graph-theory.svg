@@ -1,0 +1,60 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Subtle decorative circles -->
+  <circle cx="680" cy="70"  r="140" fill="white" opacity="0.04"/>
+  <circle cx="100" cy="440" r="110" fill="white" opacity="0.04"/>
+
+  <!-- Edges — outer hexagonal cycle -->
+  <g stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.6">
+    <line x1="178" y1="255" x2="305" y2="148"/>
+    <line x1="305" y1="148" x2="476" y2="112"/>
+    <line x1="476" y1="112" x2="598" y2="230"/>
+    <line x1="598" y1="230" x2="550" y2="368"/>
+    <line x1="550" y1="368" x2="295" y2="382"/>
+    <line x1="295" y1="382" x2="178" y2="255"/>
+  </g>
+  <!-- Cross-chord edges (lighter) -->
+  <g stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.35">
+    <line x1="305" y1="148" x2="550" y2="368"/>
+    <line x1="476" y1="112" x2="295" y2="382"/>
+    <line x1="178" y1="255" x2="598" y2="230"/>
+  </g>
+
+  <!-- Node glow halos -->
+  <g fill="white" opacity="0.18">
+    <circle cx="178" cy="255" r="40"/>
+    <circle cx="305" cy="148" r="40"/>
+    <circle cx="476" cy="112" r="40"/>
+    <circle cx="598" cy="230" r="40"/>
+    <circle cx="550" cy="368" r="40"/>
+    <circle cx="295" cy="382" r="40"/>
+  </g>
+
+  <!-- Nodes -->
+  <g fill="white">
+    <circle cx="178" cy="255" r="26"/>
+    <circle cx="305" cy="148" r="26"/>
+    <circle cx="476" cy="112" r="26"/>
+    <circle cx="598" cy="230" r="26"/>
+    <circle cx="550" cy="368" r="26"/>
+    <circle cx="295" cy="382" r="26"/>
+  </g>
+
+  <!-- Node inner colour dots -->
+  <g fill="#1d4ed8">
+    <circle cx="178" cy="255" r="12"/>
+    <circle cx="305" cy="148" r="12"/>
+    <circle cx="476" cy="112" r="12"/>
+    <circle cx="598" cy="230" r="12"/>
+    <circle cx="550" cy="368" r="12"/>
+    <circle cx="295" cy="382" r="12"/>
+  </g>
+</svg>

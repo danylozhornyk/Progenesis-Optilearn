@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- 5 arrows pointing right, staggered -->
+  <path d="M8 20 L40 20 M34 14 L40 20 L34 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 28 L44 28 M38 22 L44 28 L38 34" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 36 L48 36 M42 30 L48 36 L42 42" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 44 L44 44 M38 38 L44 44 L38 50" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 52 L40 52 M34 46 L40 52 L34 58" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

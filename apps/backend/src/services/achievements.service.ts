@@ -2,19 +2,17 @@ import { prisma } from '../db/prisma';
 import { AchievementCategory } from '../../generated/prisma';
 
 // ── Achievement definitions ───────────────────────────────────
-// Add new achievements here — they are checked automatically
-// after every test submission.
+// Platform constants:
+//   • 9 courses: 3 disciplines × 3 difficulties (BEGINNER, INTERMEDIATE, ADVANCED)
+//     Disciplines: "Graph Theory" | "Numerical Methods" | "Optimization Methods"
+//   • 6 lessons per course → 54 lessons total
+//   • 1 test per lesson, 6 tasks per test → 54 tests, 324 tasks total
 //
-// Platform constants (used to size thresholds realistically):
-//   • 3 courses max: "Graph Theory", "Optimization", "Numerical Methods"
-//   • ≤ 15 lessons per course  (≤ 45 lessons total)
-//   • ≤ 50 tests total across all courses
+// Points scale: 20 (entry) → 150 (elite/full platform).
 //
-// Points scale: 20 (entry) → 100 (elite).
-//
-// All long-running counts (perfect scores, first-try passes, distinct
-// disciplines, etc.) are pre-computed once into AchievementContext, so each
-// check() is just a fast comparison and never hits the DB on its own.
+// "completedDisciplines" = disciplines where ALL 3 difficulty courses are done.
+// Counts are pre-computed into AchievementContext so each check() is a fast
+// comparison and never hits the DB on its own.
 
 interface AchievementDefinition {
   code: string;
@@ -43,13 +41,14 @@ interface AchievementContext {
   totalCoursesCompleted: number;     // userProgress rows with progressPercent >= 100
   distinctDisciplines: number;       // unique course disciplines ever submitted in
   distinctCoursesAttempted: number;  // unique courses ever submitted in
-  completedDisciplines: Set<string>; // discipline values of completed courses
+  completedDisciplines: Set<string>; // disciplines where ALL 3 courses are completed
+  completedDifficulties: Set<string>;// difficulty levels with at least one completed course
 }
 
 const ACHIEVEMENTS: AchievementDefinition[] = [
 
   // ──────────────────────────────────────────────────────────────
-  // PROGRESS — submission & pass milestones + first course finish
+  // PROGRESS — submission & pass milestones, course completions
   // ──────────────────────────────────────────────────────────────
   {
     code: 'FIRST_SUBMISSION',
@@ -58,6 +57,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted your very first test.',
     descriptionUk: 'Надіслано перший тест.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/first-submission.svg',
     pointsAwarded: 20,
     check: async (_u, c) => c.totalSubmissions >= 1,
   },
@@ -68,6 +68,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted 5 tests.',
     descriptionUk: 'Надіслано 5 тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/submissions-5.svg',
     pointsAwarded: 25,
     check: async (_u, c) => c.totalSubmissions >= 5,
   },
@@ -78,6 +79,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted 10 tests.',
     descriptionUk: 'Надіслано 10 тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/submissions-10.svg',
     pointsAwarded: 30,
     check: async (_u, c) => c.totalSubmissions >= 10,
   },
@@ -88,6 +90,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted 25 tests.',
     descriptionUk: 'Надіслано 25 тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/submissions-25.svg',
     pointsAwarded: 45,
     check: async (_u, c) => c.totalSubmissions >= 25,
   },
@@ -95,9 +98,10 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     code: 'SUBMISSIONS_50',
     name: 'Marathoner',
     nameUk: 'Марафонець',
-    description: 'Submitted 50 tests — you\'ve touched every test on the platform.',
-    descriptionUk: 'Надіслано 50 тестів — охоплено кожен тест платформи.',
+    description: 'Submitted 50 tests.',
+    descriptionUk: 'Надіслано 50 тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/submissions-50.svg',
     pointsAwarded: 65,
     check: async (_u, c) => c.totalSubmissions >= 50,
   },
@@ -108,6 +112,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Passed a test for the first time.',
     descriptionUk: 'Вперше пройдено тест.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/first-pass.svg',
     pointsAwarded: 20,
     check: async (_u, c) => c.submission.passed && c.totalCorrectSubmissions === 1,
   },
@@ -118,6 +123,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Accumulated 5 passing test submissions.',
     descriptionUk: 'Накопичено 5 успішних проходжень тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/passes-5.svg',
     pointsAwarded: 25,
     check: async (_u, c) => c.totalCorrectSubmissions >= 5,
   },
@@ -128,6 +134,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Accumulated 10 passing test submissions.',
     descriptionUk: 'Накопичено 10 успішних проходжень тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/passes-10.svg',
     pointsAwarded: 35,
     check: async (_u, c) => c.totalCorrectSubmissions >= 10,
   },
@@ -138,6 +145,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Accumulated 25 passing test submissions.',
     descriptionUk: 'Накопичено 25 успішних проходжень тестів.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/passes-25.svg',
     pointsAwarded: 55,
     check: async (_u, c) => c.totalCorrectSubmissions >= 25,
   },
@@ -145,9 +153,10 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     code: 'PASSES_50',
     name: 'Master Examinee',
     nameUk: 'Майстер іспитів',
-    description: 'Accumulated 50 passing test submissions — the ultimate progress milestone.',
-    descriptionUk: 'Накопичено 50 успішних проходжень — найвища позначка прогресу.',
+    description: 'Accumulated 50 passing test submissions.',
+    descriptionUk: 'Накопичено 50 успішних проходжень.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/passes-50.svg',
     pointsAwarded: 100,
     check: async (_u, c) => c.totalCorrectSubmissions >= 50,
   },
@@ -158,8 +167,42 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Completed your first course.',
     descriptionUk: 'Завершено перший курс.',
     category: 'PROGRESS',
+    iconUrl: '/achievements/first-course.svg',
     pointsAwarded: 55,
     check: async (_u, c) => c.totalCoursesCompleted >= 1,
+  },
+  {
+    code: 'BEGINNER_COMPLETE',
+    name: 'Getting Started',
+    nameUk: 'Перший рівень',
+    description: 'Completed a Beginner difficulty course.',
+    descriptionUk: 'Завершено курс рівня Початківець.',
+    category: 'PROGRESS',
+    iconUrl: '/achievements/beginner-complete.svg',
+    pointsAwarded: 30,
+    check: async (_u, c) => c.completedDifficulties.has('BEGINNER'),
+  },
+  {
+    code: 'INTERMEDIATE_COMPLETE',
+    name: 'Rising Scholar',
+    nameUk: 'Зростаючий учень',
+    description: 'Completed an Intermediate difficulty course.',
+    descriptionUk: 'Завершено курс рівня Середній.',
+    category: 'PROGRESS',
+    iconUrl: '/achievements/intermediate-complete.svg',
+    pointsAwarded: 50,
+    check: async (_u, c) => c.completedDifficulties.has('INTERMEDIATE'),
+  },
+  {
+    code: 'ADVANCED_COMPLETE',
+    name: 'Advanced Master',
+    nameUk: 'Майстер вищого рівня',
+    description: 'Completed an Advanced difficulty course.',
+    descriptionUk: 'Завершено курс рівня Просунутий.',
+    category: 'PROGRESS',
+    iconUrl: '/achievements/advanced-complete.svg',
+    pointsAwarded: 75,
+    check: async (_u, c) => c.completedDifficulties.has('ADVANCED'),
   },
 
   // ──────────────────────────────────────────────────────────────
@@ -172,6 +215,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Scored 90% or higher on a test.',
     descriptionUk: 'Отримано 90% або більше за тест.',
     category: 'SKILL',
+    iconUrl: '/achievements/high-score.svg',
     pointsAwarded: 25,
     check: async (_u, c) => c.submission.percentScore >= 90,
   },
@@ -182,6 +226,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Scored 95% or higher on a test.',
     descriptionUk: 'Отримано 95% або більше за тест.',
     category: 'SKILL',
+    iconUrl: '/achievements/near-perfect.svg',
     pointsAwarded: 35,
     check: async (_u, c) => c.submission.percentScore >= 95,
   },
@@ -192,6 +237,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Achieved 100% on a test.',
     descriptionUk: 'Отримано 100% за тест.',
     category: 'SKILL',
+    iconUrl: '/achievements/perfect-score.svg',
     pointsAwarded: 30,
     check: async (_u, c) => c.submission.percentScore === 100,
   },
@@ -202,6 +248,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Earned 100% on 3 different tests.',
     descriptionUk: 'Отримано 100% за 3 тести.',
     category: 'SKILL',
+    iconUrl: '/achievements/perfect-3.svg',
     pointsAwarded: 40,
     check: async (_u, c) => c.totalPerfectScores >= 3,
   },
@@ -212,6 +259,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Earned 100% on 10 different tests.',
     descriptionUk: 'Отримано 100% за 10 тестів.',
     category: 'SKILL',
+    iconUrl: '/achievements/perfect-10.svg',
     pointsAwarded: 60,
     check: async (_u, c) => c.totalPerfectScores >= 10,
   },
@@ -219,9 +267,10 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     code: 'PERFECT_25',
     name: 'Flawless Mind',
     nameUk: 'Бездоганний розум',
-    description: 'Earned 100% on 25 tests — half the platform with a perfect score.',
-    descriptionUk: 'Отримано 100% за 25 тестів — половина платформи без помилок.',
+    description: 'Earned 100% on 25 tests.',
+    descriptionUk: 'Отримано 100% за 25 тестів.',
     category: 'SKILL',
+    iconUrl: '/achievements/perfect-25.svg',
     pointsAwarded: 85,
     check: async (_u, c) => c.totalPerfectScores >= 25,
   },
@@ -232,6 +281,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Scored 100% on your very first attempt at a test.',
     descriptionUk: 'Отримано 100% з першої спроби.',
     category: 'SKILL',
+    iconUrl: '/achievements/precision.svg',
     pointsAwarded: 50,
     check: async (_u, c) =>
       c.submission.passed &&
@@ -245,6 +295,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Passed a test on your first attempt.',
     descriptionUk: 'Пройдено тест з першої спроби.',
     category: 'SKILL',
+    iconUrl: '/achievements/first-try-pass.svg',
     pointsAwarded: 25,
     check: async (_u, c) => c.totalFirstTryPasses >= 1,
   },
@@ -255,6 +306,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Passed 5 tests on the first attempt.',
     descriptionUk: 'Пройдено 5 тестів з першої спроби.',
     category: 'SKILL',
+    iconUrl: '/achievements/first-try-5.svg',
     pointsAwarded: 40,
     check: async (_u, c) => c.totalFirstTryPasses >= 5,
   },
@@ -265,6 +317,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Passed 10 tests on the first attempt.',
     descriptionUk: 'Пройдено 10 тестів з першої спроби.',
     category: 'SKILL',
+    iconUrl: '/achievements/first-try-10.svg',
     pointsAwarded: 60,
     check: async (_u, c) => c.totalFirstTryPasses >= 10,
   },
@@ -279,6 +332,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Answered 10 tasks correctly in total.',
     descriptionUk: 'Разом правильно відповіли на 10 завдань.',
     category: 'STREAK',
+    iconUrl: '/achievements/streak-10.svg',
     pointsAwarded: 20,
     check: async (_u, c) => c.totalCorrectTaskAnswers >= 10,
   },
@@ -289,6 +343,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Answered 50 tasks correctly in total.',
     descriptionUk: 'Разом правильно відповіли на 50 завдань.',
     category: 'STREAK',
+    iconUrl: '/achievements/streak-50.svg',
     pointsAwarded: 30,
     check: async (_u, c) => c.totalCorrectTaskAnswers >= 50,
   },
@@ -299,6 +354,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Answered 100 tasks correctly in total.',
     descriptionUk: 'Разом правильно відповіли на 100 завдань.',
     category: 'STREAK',
+    iconUrl: '/achievements/streak-100.svg',
     pointsAwarded: 45,
     check: async (_u, c) => c.totalCorrectTaskAnswers >= 100,
   },
@@ -309,6 +365,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Answered 200 tasks correctly in total.',
     descriptionUk: 'Разом правильно відповіли на 200 завдань.',
     category: 'STREAK',
+    iconUrl: '/achievements/streak-200.svg',
     pointsAwarded: 65,
     check: async (_u, c) => c.totalCorrectTaskAnswers >= 200,
   },
@@ -319,6 +376,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted the same test 3 or more times.',
     descriptionUk: 'Надіслано один тест 3 або більше разів.',
     category: 'STREAK',
+    iconUrl: '/achievements/persistent.svg',
     pointsAwarded: 20,
     check: async (_u, c) => c.submission.attemptNumber >= 3,
   },
@@ -329,6 +387,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted the same test 5 or more times.',
     descriptionUk: 'Надіслано один тест 5 або більше разів.',
     category: 'STREAK',
+    iconUrl: '/achievements/never-give-up.svg',
     pointsAwarded: 30,
     check: async (_u, c) => c.submission.attemptNumber >= 5,
   },
@@ -339,6 +398,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Passed a test after 5 or more attempts.',
     descriptionUk: 'Пройдено тест після 5 або більше спроб.',
     category: 'STREAK',
+    iconUrl: '/achievements/unstoppable.svg',
     pointsAwarded: 45,
     check: async (_u, c) =>
       c.submission.passed && c.submission.attemptNumber >= 5,
@@ -350,6 +410,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Passed a test that you had previously failed.',
     descriptionUk: 'Пройдено тест, який раніше не вдавалося пройти.',
     category: 'STREAK',
+    iconUrl: '/achievements/phoenix.svg',
     pointsAwarded: 25,
     check: async (_u, c) => c.totalPhoenixPasses >= 1,
   },
@@ -360,12 +421,13 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Came back to pass 5 tests you had previously failed.',
     descriptionUk: 'Повернулися та пройшли 5 раніше провалених тестів.',
     category: 'STREAK',
+    iconUrl: '/achievements/resilient.svg',
     pointsAwarded: 50,
     check: async (_u, c) => c.totalPhoenixPasses >= 5,
   },
 
   // ──────────────────────────────────────────────────────────────
-  // SOCIAL — multi-course exploration & subject completions
+  // SOCIAL — multi-course exploration, discipline & full mastery
   // ──────────────────────────────────────────────────────────────
   {
     code: 'CURIOUS',
@@ -374,18 +436,31 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Submitted tests in 2 different courses.',
     descriptionUk: 'Надіслано тести в 2 різних курсах.',
     category: 'SOCIAL',
+    iconUrl: '/achievements/curious.svg',
     pointsAwarded: 30,
     check: async (_u, c) => c.distinctCoursesAttempted >= 2,
+  },
+  {
+    code: 'COURSES_5_ATTEMPTED',
+    name: 'Wide Learner',
+    nameUk: 'Широкий учень',
+    description: 'Submitted tests in 5 different courses.',
+    descriptionUk: 'Надіслано тести у 5 різних курсах.',
+    category: 'SOCIAL',
+    iconUrl: '/achievements/courses-5-attempted.svg',
+    pointsAwarded: 45,
+    check: async (_u, c) => c.distinctCoursesAttempted >= 5,
   },
   {
     code: 'ALL_COURSES_ATTEMPTED',
     name: 'All-Rounder',
     nameUk: 'Різносторонній',
-    description: 'Submitted tests in all 3 courses on the platform.',
-    descriptionUk: 'Надіслано тести у всіх 3 курсах платформи.',
+    description: 'Submitted tests in all 9 courses on the platform.',
+    descriptionUk: 'Надіслано тести у всіх 9 курсах платформи.',
     category: 'SOCIAL',
-    pointsAwarded: 50,
-    check: async (_u, c) => c.distinctCoursesAttempted >= 3,
+    iconUrl: '/achievements/all-courses-attempted.svg',
+    pointsAwarded: 75,
+    check: async (_u, c) => c.distinctCoursesAttempted >= 9,
   },
   {
     code: 'EXPLORER',
@@ -394,6 +469,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Practiced in 2 different mathematical disciplines.',
     descriptionUk: 'Практика у 2 різних математичних дисциплінах.',
     category: 'SOCIAL',
+    iconUrl: '/achievements/explorer.svg',
     pointsAwarded: 40,
     check: async (_u, c) => c.distinctDisciplines >= 2,
   },
@@ -404,6 +480,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Practiced across all 3 mathematical disciplines.',
     descriptionUk: 'Практика у всіх 3 математичних дисциплінах.',
     category: 'SOCIAL',
+    iconUrl: '/achievements/polymath.svg',
     pointsAwarded: 70,
     check: async (_u, c) => c.distinctDisciplines >= 3,
   },
@@ -411,30 +488,33 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     code: 'GRAPH_THEORIST',
     name: 'Graph Theorist',
     nameUk: 'Теоретик графів',
-    description: 'Completed the Graph Theory course.',
-    descriptionUk: 'Завершено курс «Теорія графів».',
+    description: 'Completed all Graph Theory courses (all 3 difficulty levels).',
+    descriptionUk: 'Завершено всі курси «Теорія графів» (усі 3 рівні складності).',
     category: 'SOCIAL',
-    pointsAwarded: 55,
+    iconUrl: '/achievements/graph-theorist.svg',
+    pointsAwarded: 90,
     check: async (_u, c) => c.completedDisciplines.has('Graph Theory'),
   },
   {
     code: 'OPTIMIZER',
     name: 'Optimizer',
     nameUk: 'Оптимізатор',
-    description: 'Completed the Optimization course.',
-    descriptionUk: 'Завершено курс «Оптимізація».',
+    description: 'Completed all Optimization Methods courses (all 3 difficulty levels).',
+    descriptionUk: 'Завершено всі курси «Методи оптимізації» (усі 3 рівні складності).',
     category: 'SOCIAL',
-    pointsAwarded: 55,
-    check: async (_u, c) => c.completedDisciplines.has('Optimization'),
+    iconUrl: '/achievements/optimizer.svg',
+    pointsAwarded: 90,
+    check: async (_u, c) => c.completedDisciplines.has('Optimization Methods'),
   },
   {
     code: 'NUMERICS_MASTER',
     name: 'Numerical Analyst',
     nameUk: 'Числовий аналітик',
-    description: 'Completed the Numerical Methods course.',
-    descriptionUk: 'Завершено курс «Чисельні методи».',
+    description: 'Completed all Numerical Methods courses (all 3 difficulty levels).',
+    descriptionUk: 'Завершено всі курси «Чисельні методи» (усі 3 рівні складності).',
     category: 'SOCIAL',
-    pointsAwarded: 55,
+    iconUrl: '/achievements/numerics-master.svg',
+    pointsAwarded: 90,
     check: async (_u, c) => c.completedDisciplines.has('Numerical Methods'),
   },
   {
@@ -444,6 +524,7 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'Completed 2 courses.',
     descriptionUk: 'Завершено 2 курси.',
     category: 'SOCIAL',
+    iconUrl: '/achievements/courses-2.svg',
     pointsAwarded: 65,
     check: async (_u, c) => c.totalCoursesCompleted >= 2,
   },
@@ -451,11 +532,34 @@ const ACHIEVEMENTS: AchievementDefinition[] = [
     code: 'COURSES_3',
     name: 'Triple Champion',
     nameUk: 'Потрійний чемпіон',
-    description: 'Completed all 3 courses — you mastered the entire platform!',
-    descriptionUk: 'Завершено всі 3 курси — ви опанували всю платформу!',
+    description: 'Completed 3 courses.',
+    descriptionUk: 'Завершено 3 курси.',
     category: 'SOCIAL',
-    pointsAwarded: 100,
+    iconUrl: '/achievements/courses-3.svg',
+    pointsAwarded: 80,
     check: async (_u, c) => c.totalCoursesCompleted >= 3,
+  },
+  {
+    code: 'COURSES_6',
+    name: 'Halfway Hero',
+    nameUk: 'Герой середини шляху',
+    description: 'Completed 6 courses — halfway through the platform.',
+    descriptionUk: 'Завершено 6 курсів — половина платформи.',
+    category: 'SOCIAL',
+    iconUrl: '/achievements/courses-6.svg',
+    pointsAwarded: 100,
+    check: async (_u, c) => c.totalCoursesCompleted >= 6,
+  },
+  {
+    code: 'COURSES_9',
+    name: 'Platform Master',
+    nameUk: 'Майстер платформи',
+    description: 'Completed all 9 courses — you mastered the entire platform!',
+    descriptionUk: 'Завершено всі 9 курсів — ви опанували всю платформу!',
+    category: 'SOCIAL',
+    iconUrl: '/achievements/courses-9.svg',
+    pointsAwarded: 150,
+    check: async (_u, c) => c.totalCoursesCompleted >= 9,
   },
 ];
 
@@ -468,8 +572,6 @@ export async function checkAndAwardAchievements(
     attemptNumber: number;
   }
 ) {
-  // ── Build context — all aggregations precomputed up-front so each
-  // achievement's check() is just a comparison.
   const [
     totalSubmissions,
     totalCorrectSubmissions,
@@ -510,20 +612,17 @@ export async function checkAndAwardAchievements(
     prisma.userProgress.count({
       where: { userId, progressPercent: { gte: 100 } },
     }),
-    // Disciplines of fully-completed courses (for subject-specific badges).
     prisma.userProgress.findMany({
       where: { userId, progressPercent: { gte: 100 } },
-      select: { course: { select: { discipline: true } } },
+      select: { course: { select: { discipline: true, difficulty: true } } },
     }),
   ]);
 
-  // Sum correct task answers across submissions.answers JSONB.
   const totalCorrectTaskAnswers = submissionsFull.reduce((count, sub) => {
     const answers = sub.answers as { isCorrect: boolean }[];
     return count + answers.filter((a) => a.isCorrect).length;
   }, 0);
 
-  // Distinct disciplines / courses the user has ever submitted in.
   const distinctDisciplines = new Set(
     submissionsFull.map((s) => s.test.lesson.course.discipline),
   ).size;
@@ -531,9 +630,19 @@ export async function checkAndAwardAchievements(
     submissionsFull.map((s) => s.test.lesson.courseId),
   ).size;
 
-  // Disciplines where the user has completed the full course.
+  // Count completed courses per discipline, and collect completed difficulty levels.
+  const disciplineCounts = new Map<string, number>();
+  const completedDifficulties = new Set<string>();
+  for (const p of completedCourseDetails) {
+    const d = p.course.discipline;
+    disciplineCounts.set(d, (disciplineCounts.get(d) ?? 0) + 1);
+    completedDifficulties.add(p.course.difficulty as string);
+  }
+  // A discipline is "completed" only when all 3 difficulty courses are done.
   const completedDisciplines = new Set(
-    completedCourseDetails.map((p) => p.course.discipline),
+    [...disciplineCounts.entries()]
+      .filter(([, n]) => n >= 3)
+      .map(([d]) => d),
   );
 
   const context: AchievementContext = {
@@ -548,16 +657,15 @@ export async function checkAndAwardAchievements(
     distinctDisciplines,
     distinctCoursesAttempted,
     completedDisciplines,
+    completedDifficulties,
   };
 
-  // ── Get already awarded codes to avoid duplicates ───────────
   const existing = await prisma.achievement.findMany({
     where: { userId },
     select: { code: true },
   });
   const existingCodes = new Set(existing.map((a) => a.code));
 
-  // ── Check each achievement definition ──────────────────────
   const awarded = [];
 
   for (const def of ACHIEVEMENTS) {
@@ -586,7 +694,6 @@ export async function checkAndAwardAchievements(
 }
 
 // ── Public list of all achievement definitions ────────────────
-// Used by the profile page to show locked vs. earned badges.
 export function getAchievementDefinitions() {
   return ACHIEVEMENTS.map((a) => ({
     code: a.code,

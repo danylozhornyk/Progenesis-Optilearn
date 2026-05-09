@@ -1,0 +1,52 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Background decoration -->
+  <circle cx="700" cy="70"  r="140" fill="white" opacity="0.04"/>
+  <circle cx="100" cy="440" r="110" fill="white" opacity="0.04"/>
+
+  <!-- Axes -->
+  <line x1="80"  y1="280" x2="720" y2="280" stroke="rgba(255,255,255,0.35)" stroke-width="1.8"/>
+  <path d="M716,274 L730,280 L716,286 Z" fill="rgba(255,255,255,0.35)"/>
+  <line x1="110" y1="430" x2="110" y2="70" stroke="rgba(255,255,255,0.35)" stroke-width="1.8"/>
+  <path d="M104,74 L110,60 L116,74 Z" fill="rgba(255,255,255,0.35)"/>
+
+  <!-- "True" smooth function (solid amber, gently curving) -->
+  <path d="M 130,250 C 250,200 400,300 540,220 C 620,180 660,260 690,240"
+        fill="none" stroke="#fbbf24" stroke-width="2.8" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- High-degree interpolant with Runge oscillations at edges (white, wiggly) -->
+  <!-- Matches the true function near center but oscillates wildly at edges -->
+  <path d="M 130,430 C 155,120 175,400 200,360 C 240,310 290,270 340,250 C 380,235 420,260 460,240 C 510,215 545,230 570,240 C 605,255 640,120 670,380 C 675,430 685,350 690,240"
+        fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.8" stroke-linecap="round"/>
+
+  <!-- Data points (interpolation nodes) — marked with circles -->
+  <g fill="#a78bfa" stroke="white" stroke-width="1.5">
+    <circle cx="150" cy="350" r="6"/>
+    <circle cx="230" cy="320" r="6"/>
+    <circle cx="310" cy="268" r="6"/>
+    <circle cx="400" cy="248" r="6"/>
+    <circle cx="490" cy="232" r="6"/>
+    <circle cx="570" cy="242" r="6"/>
+    <circle cx="650" cy="260" r="6"/>
+  </g>
+
+  <!-- Legend labels -->
+  <!-- True function line sample -->
+  <line x1="530" y1="420" x2="570" y2="420" stroke="#fbbf24" stroke-width="2.5"/>
+  <text x="578" y="425" font-size="13" font-family="sans-serif" fill="rgba(255,255,255,0.7)">true f(x)</text>
+  <!-- Interpolant line sample -->
+  <line x1="530" y1="445" x2="570" y2="445" stroke="rgba(255,255,255,0.8)" stroke-width="2.5"/>
+  <text x="578" y="450" font-size="13" font-family="sans-serif" fill="rgba(255,255,255,0.7)">interpolant</text>
+
+  <!-- Runge oscillation annotation arrows / braces at edges -->
+  <path d="M 155,390 Q 145,450 165,460" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+  <path d="M 655,320 Q 670,390 650,400" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+</svg>

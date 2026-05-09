@@ -1,0 +1,67 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="rgba(255,255,255,0.8)"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Background decoration -->
+  <circle cx="680" cy="80"  r="130" fill="white" opacity="0.05"/>
+  <circle cx="100" cy="430" r="110" fill="white" opacity="0.05"/>
+
+  <!-- Axes -->
+  <line x1="80"  y1="390" x2="720" y2="390" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
+  <path d="M716,383 L732,390 L716,397 Z" fill="rgba(255,255,255,0.45)"/>
+  <line x1="130" y1="420" x2="130" y2="80" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
+  <path d="M124,84 L130,70 L136,84 Z" fill="rgba(255,255,255,0.45)"/>
+
+  <!-- Parabola (bowl / U-shape): vertex at (400,380), opens up in SVG so vertex is at bottom -->
+  <!-- y = 0.0028*(x-400)^2 + 100  → y(400)=100, y(160)=161, y(700)=268... too flat -->
+  <!-- Let me use y(SVG) = 390 - 290*(1 - ((x-400)/290)^2) so vertex at (400,100), edges at y=390 -->
+  <!-- That's: y = 390 - 290 + 290*((x-400)/290)^2 = 100 + (x-400)^2/290 -->
+  <!-- y(130) = 100 + 270^2/290 = 100+251.7=352 -->
+  <!-- y(670) = 100 + 270^2/290 = 352 -->
+  <!-- Bezier: M 130,352 Q 400,100 670,352 — this gives vertex at (400, (352+100)/2)=(400,226) no... -->
+  <!-- For quadratic Bezier, midpoint at t=0.5: (P0+2*P1+P2)/4 = (352+200+352)/4 = (904)/4 = hmm wait -->
+  <!-- Quadratic Bezier at t=0.5: y = 0.25*352 + 0.5*Py1 + 0.25*352 = 176 + 0.5*Py1 -->
+  <!-- We want y(t=0.5) = 100: 176 + 0.5*Py1 = 100 → Py1 = -152... that's off screen -->
+  <!-- Better: use cubic Bezier with control points to make a nice parabola -->
+  <!-- M 130,360 C 200,80 600,80 670,360 -->
+  <!-- At t=0.5: (1/8)*(130,360) + (3/8)*(200,80) + (3/8)*(600,80) + (1/8)*(670,360) -->
+  <!-- x: 16.25+75+225+83.75=400 ✓ -->
+  <!-- y: 45+30+30+45=150 — vertex approximately at y=150 -->
+
+  <path d="M 130,360 C 200,85 600,85 670,360"
+        fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Gradient descent arrows along the right branch of the parabola -->
+  <!-- Points on right branch approximately: (600,95), (570,113), (540,135), (510,165), (480,205), (450,255), (420,315) ... →(400,150) vertex -->
+  <!-- Let's show 4 arrows descending toward the minimum from the right -->
+  <g stroke="rgba(255,255,255,0.75)" stroke-width="2.5" marker-end="url(#arr)">
+    <line x1="608" y1="200" x2="570" y2="153"/>
+    <line x1="557" y1="143" x2="520" y2="130"/>
+    <line x1="506" y1="127" x2="470" y2="132"/>
+    <line x1="455" y1="135" x2="420" y2="145"/>
+  </g>
+
+  <!-- Minimum point (vertex ~400, 150) glow -->
+  <circle cx="400" cy="148" r="24" fill="white" opacity="0.2"/>
+  <!-- Minimum marker: gold star / prominent circle -->
+  <circle cx="400" cy="148" r="14" fill="#fbbf24" stroke="white" stroke-width="2.5"/>
+  <circle cx="400" cy="148" r="6"  fill="#78350f"/>
+
+  <!-- Vertical dashed line from minimum to x-axis -->
+  <line x1="400" y1="148" x2="400" y2="390" stroke="rgba(255,255,255,0.35)" stroke-width="1.8" stroke-dasharray="6,5"/>
+
+  <!-- x* label on x-axis -->
+  <text x="400" y="413" text-anchor="middle" font-size="18" font-family="serif" fill="#fbbf24">x*</text>
+
+  <!-- f(x*) = minimum label -->
+  <text x="430" y="148" font-size="15" font-family="serif" fill="rgba(255,255,255,0.75)" dominant-baseline="middle">f(x*) = min</text>
+</svg>

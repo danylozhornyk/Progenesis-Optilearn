@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- gear / cog -->
+  <path d="M26 8 L28 14 Q32 13 36 14 L38 8 L44 10 L42 16 Q45 19 47 22 L53 20 L56 26 L50 29 Q51 32 50 35 L56 38 L54 44 L48 42 Q45 45 42 47 L44 53 L38 56 L36 50 Q32 51 28 50 L26 56 L20 54 L22 48 Q19 45 17 42 L11 44 L8 38 L14 35 Q13 32 14 29 L8 26 L11 20 L17 22 Q19 19 22 16 L20 10 Z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="white" fill-opacity="0.15"/>
+  <circle cx="32" cy="32" r="9" stroke="white" stroke-width="2.5" fill="white" fill-opacity="0.2"/>
+</svg>

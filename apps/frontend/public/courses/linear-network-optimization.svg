@@ -1,0 +1,106 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c2d12"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <path d="M0,0 L10,3.5 L0,7 Z" fill="rgba(255,255,255,0.65)"/>
+    </marker>
+    <marker id="arr-hi" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <path d="M0,0 L10,3.5 L0,7 Z" fill="#fbbf24"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Background decoration -->
+  <circle cx="700" cy="80"  r="130" fill="white" opacity="0.05"/>
+  <circle cx="100" cy="440" r="100" fill="white" opacity="0.04"/>
+
+  <!--
+    Network nodes:
+      s  = (110, 252)   source
+      A  = (295, 152)
+      B  = (295, 352)
+      C  = (510, 152)
+      D  = (510, 352)
+      t  = (685, 252)   sink
+  -->
+
+  <!-- All edges (drawn first so node circles mask arrowhead tips) -->
+  <!-- Default edges -->
+  <g stroke="rgba(255,255,255,0.55)" stroke-width="2.5" marker-end="url(#arr)">
+    <line x1="110" y1="252" x2="295" y2="352"/>
+    <line x1="295" y1="152" x2="295" y2="352"/>
+    <line x1="295" y1="352" x2="510" y2="352"/>
+    <line x1="510" y1="152" x2="510" y2="352"/>
+    <line x1="510" y1="352" x2="685" y2="252"/>
+  </g>
+  <!-- Highlighted max-flow path: s→A→C→t -->
+  <g stroke="#fbbf24" stroke-width="4" marker-end="url(#arr-hi)">
+    <line x1="110" y1="252" x2="295" y2="152"/>
+    <line x1="295" y1="152" x2="510" y2="152"/>
+    <line x1="510" y1="152" x2="685" y2="252"/>
+  </g>
+
+  <!-- Capacity / flow labels on edges (white pill tags) -->
+  <g font-size="12" font-family="sans-serif" text-anchor="middle">
+    <!-- s→A label -->
+    <rect x="180" y="183" width="44" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="202" y="196" fill="white">10/10</text>
+    <!-- s→B label -->
+    <rect x="172" y="315" width="38" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="191" y="328" fill="white">8/8</text>
+    <!-- A→C label -->
+    <rect x="375" y="132" width="38" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="394" y="145" fill="white">9/9</text>
+    <!-- A→B label -->
+    <rect x="260" y="237" width="34" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="277" y="250" fill="white">3/3</text>
+    <!-- B→D label -->
+    <rect x="375" y="357" width="38" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="394" y="370" fill="white">7/7</text>
+    <!-- C→D label -->
+    <rect x="474" y="237" width="34" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="491" y="250" fill="white">4/4</text>
+    <!-- C→t label -->
+    <rect x="564" y="183" width="38" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="583" y="196" fill="white">6/6</text>
+    <!-- D→t label -->
+    <rect x="564" y="315" width="38" height="18" rx="4" fill="rgba(0,0,0,0.35)"/>
+    <text x="583" y="328" fill="white">9/9</text>
+  </g>
+
+  <!-- Node halos -->
+  <g fill="white" opacity="0.18">
+    <circle cx="110" cy="252" r="38"/>
+    <circle cx="295" cy="152" r="38"/>
+    <circle cx="295" cy="352" r="38"/>
+    <circle cx="510" cy="152" r="38"/>
+    <circle cx="510" cy="352" r="38"/>
+    <circle cx="685" cy="252" r="38"/>
+  </g>
+
+  <!-- Nodes -->
+  <g fill="white">
+    <circle cx="110" cy="252" r="26"/>
+    <circle cx="295" cy="152" r="26"/>
+    <circle cx="295" cy="352" r="26"/>
+    <circle cx="510" cy="152" r="26"/>
+    <circle cx="510" cy="352" r="26"/>
+    <circle cx="685" cy="252" r="26"/>
+  </g>
+
+  <!-- Node inner colour (highlighted path nodes amber) -->
+  <circle cx="110" cy="252" r="12" fill="#fbbf24"/>
+  <circle cx="295" cy="152" r="12" fill="#fbbf24"/>
+  <circle cx="295" cy="352" r="12" fill="#7c2d12"/>
+  <circle cx="510" cy="152" r="12" fill="#fbbf24"/>
+  <circle cx="510" cy="352" r="12" fill="#7c2d12"/>
+  <circle cx="685" cy="252" r="12" fill="#fbbf24"/>
+
+  <!-- s / t labels -->
+  <text x="110" y="257" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="bold" font-family="monospace" fill="#7c2d12">s</text>
+  <text x="685" y="257" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="bold" font-family="monospace" fill="#7c2d12">t</text>
+</svg>

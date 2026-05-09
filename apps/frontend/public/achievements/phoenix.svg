@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- flame base -->
+  <path d="M24 56 Q18 48 20 40 Q16 44 18 36 Q22 28 32 24 Q30 30 34 34 Q38 28 36 18 Q44 24 46 34 Q50 30 48 38 Q50 46 44 56 Z" fill="white" fill-opacity="0.85" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- bird wings rising -->
+  <path d="M22 28 Q14 20 8 22 Q14 16 22 20" fill="white" fill-opacity="0.5" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M42 28 Q50 20 56 22 Q50 16 42 20" fill="white" fill-opacity="0.5" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- inner light -->
+  <path d="M28 50 Q24 44 26 38 Q32 32 38 38 Q40 44 36 50 Z" fill="white" fill-opacity="0.3"/>
+</svg>

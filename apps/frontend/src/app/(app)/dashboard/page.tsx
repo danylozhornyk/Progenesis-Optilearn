@@ -10,12 +10,8 @@ export default function DashboardRedirect() {
 
   useEffect(() => {
     if (loading) return;
-    if (user?.role === 'ADMIN') {
-      router.replace('/admin/stats');
-    } else {
-      router.replace('/profile');
-    }
-  }, [user, loading, router]);
+    router.replace('/profile');
+  }, [loading, router]);
 
   return null;
 }

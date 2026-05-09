@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- six-pointed star (Star of David) -->
+  <polygon points="32,8 42,26 54,26 44,38 48,56 32,46 16,56 20,38 10,26 22,26" fill="white" fill-opacity="0.9"/>
+  <polygon points="32,56 22,38 10,38 20,26 16,8 32,18 48,8 44,26 54,38 42,38" fill="white" fill-opacity="0.35"/>
+</svg>

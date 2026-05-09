@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- globe with star overlay -->
+  <circle cx="32" cy="32" r="24" stroke="white" stroke-width="2.5" fill="white" fill-opacity="0.1"/>
+  <ellipse cx="32" cy="32" rx="12" ry="24" stroke="white" stroke-width="1.5" fill="none"/>
+  <line x1="8" y1="22" x2="56" y2="22" stroke="white" stroke-width="1.5"/>
+  <line x1="8" y1="42" x2="56" y2="42" stroke="white" stroke-width="1.5"/>
+  <line x1="8" y1="32" x2="56" y2="32" stroke="white" stroke-width="1.5"/>
+  <!-- star overlay -->
+  <polygon points="32,18 34,24 40,24 36,28 37,34 32,30 27,34 28,28 24,24 30,24" fill="white" fill-opacity="0.9"/>
+</svg>

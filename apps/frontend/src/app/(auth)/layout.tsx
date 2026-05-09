@@ -65,7 +65,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         />
 
         <div className="relative flex items-center gap-2">
-          <div className="w-6 h-6 bg-white rounded-sm" />
+          <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="3" y1="17" x2="10" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="10" y1="10" x2="17" y2="3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+            <circle cx="3" cy="17" r="3" fill="white"/>
+            <circle cx="10" cy="10" r="2" fill="white"/>
+            <circle cx="17" cy="3" r="1.5" fill="white"/>
+          </svg>
           <span className="font-semibold text-lg tracking-tight">{t('common.appName')}</span>
         </div>
 
@@ -88,7 +94,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Top bar */}
         <div className="flex items-center justify-between px-8 pt-6 pb-2">
           <Link href="/" className="flex items-center gap-2 lg:invisible">
-            <div className="w-5 h-5 bg-foreground rounded-sm" />
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-foreground" aria-hidden="true">
+              <line x1="3" y1="17" x2="10" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10" y1="10" x2="17" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="3" cy="17" r="3" fill="currentColor"/>
+              <circle cx="10" cy="10" r="2" fill="currentColor"/>
+              <circle cx="17" cy="3" r="1.5" fill="currentColor"/>
+            </svg>
             <span className="font-semibold text-foreground">{t('common.appName')}</span>
           </Link>
 

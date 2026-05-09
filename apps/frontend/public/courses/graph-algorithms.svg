@@ -1,0 +1,71 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <!-- Default arrow marker -->
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <path d="M0,0 L10,3.5 L0,7 Z" fill="rgba(255,255,255,0.6)"/>
+    </marker>
+    <!-- Highlighted path arrow -->
+    <marker id="arr-hi" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <path d="M0,0 L10,3.5 L0,7 Z" fill="#fbbf24"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Subtle bg decoration -->
+  <circle cx="720" cy="80"  r="130" fill="white" opacity="0.04"/>
+  <circle cx="90"  cy="440" r="100" fill="white" opacity="0.04"/>
+
+  <!-- Non-highlighted edges (drawn first so nodes cover arrowhead tips) -->
+  <g stroke="rgba(255,255,255,0.55)" stroke-width="2.5" marker-end="url(#arr)">
+    <line x1="142" y1="252" x2="296" y2="165"/>
+    <line x1="142" y1="252" x2="296" y2="337"/>
+    <line x1="296" y1="165" x2="296" y2="337"/>
+    <line x1="296" y1="337" x2="515" y2="337"/>
+    <line x1="515" y1="165" x2="515" y2="337"/>
+    <line x1="515" y1="337" x2="654" y2="252"/>
+  </g>
+
+  <!-- Highlighted path: s → A → C → t (amber) -->
+  <g stroke="#fbbf24" stroke-width="4" marker-end="url(#arr-hi)">
+    <line x1="142" y1="252" x2="296" y2="165"/>
+    <line x1="296" y1="165" x2="515" y2="165"/>
+    <line x1="515" y1="165" x2="654" y2="252"/>
+  </g>
+
+  <!-- Node glow halos -->
+  <g fill="white" opacity="0.18">
+    <circle cx="142" cy="252" r="38"/>
+    <circle cx="296" cy="165" r="38"/>
+    <circle cx="296" cy="337" r="38"/>
+    <circle cx="515" cy="165" r="38"/>
+    <circle cx="515" cy="337" r="38"/>
+    <circle cx="654" cy="252" r="38"/>
+  </g>
+
+  <!-- Nodes -->
+  <g fill="white">
+    <circle cx="142" cy="252" r="26"/>
+    <circle cx="296" cy="165" r="26"/>
+    <circle cx="296" cy="337" r="26"/>
+    <circle cx="515" cy="165" r="26"/>
+    <circle cx="515" cy="337" r="26"/>
+    <circle cx="654" cy="252" r="26"/>
+  </g>
+
+  <!-- Highlighted nodes on path get amber fill -->
+  <circle cx="142" cy="252" r="13" fill="#0f766e"/>
+  <circle cx="296" cy="165" r="13" fill="#fbbf24"/>
+  <circle cx="296" cy="337" r="13" fill="#0f766e"/>
+  <circle cx="515" cy="165" r="13" fill="#fbbf24"/>
+  <circle cx="515" cy="337" r="13" fill="#0f766e"/>
+  <circle cx="654" cy="252" r="13" fill="#fbbf24"/>
+
+  <!-- Labels s and t -->
+  <text x="142" y="257" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="bold" font-family="monospace" fill="#064e3b">s</text>
+  <text x="654" y="257" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="bold" font-family="monospace" fill="#064e3b">t</text>
+</svg>

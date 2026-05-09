@@ -1,0 +1,65 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4c1d95"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Background decoration -->
+  <circle cx="680" cy="80"  r="130" fill="white" opacity="0.04"/>
+  <circle cx="100" cy="440" r="110" fill="white" opacity="0.04"/>
+
+  <!-- X-axis (math baseline at SVG y=355) -->
+  <line x1="100" y1="355" x2="700" y2="355" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+  <!-- Axis arrow -->
+  <path d="M696,348 L712,355 L696,362 Z" fill="rgba(255,255,255,0.4)"/>
+
+  <!-- Smooth S-curve (cubic polynomial crossing x-axis at x≈515) -->
+  <!-- Above x-axis (SVG y < 355): positive values -->
+  <!-- Below x-axis (SVG y > 355): negative values -->
+  <path d="M 110,175 C 220,200 310,280 400,330 C 450,352 480,355 515,355 C 560,355 600,370 700,430"
+        fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Newton iteration tangent lines (dashed, light) -->
+  <!-- Iter 1: from point (200,232) on curve, tangent hits x-axis at x=370 -->
+  <line x1="200" y1="232" x2="370" y2="355" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-dasharray="6,4"/>
+  <!-- Iter 2: from (370,315) on curve, tangent hits at x=474 -->
+  <line x1="370" y1="315" x2="474" y2="355" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-dasharray="6,4"/>
+  <!-- Iter 3: from (474,345) on curve, tangent hits at x=515 (root) -->
+  <line x1="474" y1="345" x2="515" y2="355" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-dasharray="6,4"/>
+
+  <!-- Vertical drop lines to x-axis (show xi positions) -->
+  <g stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4,4">
+    <line x1="200" y1="355" x2="200" y2="232"/>
+    <line x1="370" y1="355" x2="370" y2="315"/>
+    <line x1="474" y1="355" x2="474" y2="345"/>
+  </g>
+
+  <!-- X-axis tick marks for iteration points -->
+  <g stroke="rgba(255,255,255,0.6)" stroke-width="2">
+    <line x1="200" y1="348" x2="200" y2="362"/>
+    <line x1="370" y1="348" x2="370" y2="362"/>
+    <line x1="474" y1="348" x2="474" y2="362"/>
+    <line x1="515" y1="348" x2="515" y2="362"/>
+  </g>
+
+  <!-- Labels x₀ x₁ x₂ x* -->
+  <text x="200" y="378" text-anchor="middle" font-size="15" font-family="serif" fill="rgba(255,255,255,0.75)">x₀</text>
+  <text x="370" y="378" text-anchor="middle" font-size="15" font-family="serif" fill="rgba(255,255,255,0.75)">x₁</text>
+  <text x="474" y="378" text-anchor="middle" font-size="15" font-family="serif" fill="rgba(255,255,255,0.75)">x₂</text>
+  <text x="515" y="378" text-anchor="middle" font-size="15" font-family="serif" fill="#fbbf24">x*</text>
+
+  <!-- Root marker (gold circle on x-axis) -->
+  <circle cx="515" cy="355" r="8" fill="#fbbf24"/>
+  <circle cx="515" cy="355" r="4" fill="#78350f"/>
+
+  <!-- Points on curve at each iteration -->
+  <g fill="white" opacity="0.9">
+    <circle cx="200" cy="232" r="6"/>
+    <circle cx="370" cy="315" r="6"/>
+    <circle cx="474" cy="345" r="6"/>
+  </g>
+</svg>

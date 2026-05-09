@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Brain outline -->
+  <path d="M32 52 L32 44" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M20 44 Q10 44 10 34 Q10 26 18 24 Q18 14 26 12 Q30 10 32 12 Q34 10 38 12 Q46 14 46 24 Q54 26 54 34 Q54 44 44 44 Z" stroke="white" stroke-width="2.5" fill="white" fill-opacity="0.15" stroke-linejoin="round"/>
+  <path d="M32 12 L32 44" stroke="white" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <path d="M22 26 Q28 22 32 26 Q36 22 42 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M18 36 Q24 32 30 36" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M34 36 Q40 32 46 36" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

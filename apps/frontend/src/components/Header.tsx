@@ -67,48 +67,47 @@ export default function Header() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group shrink-0">
             <svg
-              width="22"
-              height="22"
-              viewBox="0 0 22 22"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-foreground shrink-0 transition-transform group-hover:scale-110"
+              className="w-5 h-5 text-foreground shrink-0 transition-transform group-hover:scale-110 overflow-hidden"
               aria-hidden="true"
             >
-              <line x1="3.5" y1="18.5" x2="11" y2="10.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-              <line x1="11" y1="10.5" x2="18.5" y2="3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-              <circle cx="3.5" cy="18.5" r="3.25" fill="currentColor"/>
-              <circle cx="11" cy="10.5" r="2.25" fill="currentColor"/>
-              <circle cx="18.5" cy="3.5" r="1.75" fill="currentColor"/>
+              <line x1="3" y1="17" x2="10" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10" y1="10" x2="17" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="3" cy="17" r="3" fill="currentColor"/>
+              <circle cx="10" cy="10" r="2" fill="currentColor"/>
+              <circle cx="17" cy="3" r="1.5" fill="currentColor"/>
             </svg>
             <span className="font-semibold text-foreground tracking-tight">
               {t('common.appName')}
             </span>
           </Link>
 
-          {user?.role !== 'ADMIN' && (
-            <nav className="hidden sm:flex items-center gap-1">
-              {[
-                { href: '/courses', label: t('nav.courses') },
-                { href: '/faq',     label: t('nav.faq')     },
-              ].map(({ href, label }) => {
-                const active = pathname === href || pathname.startsWith(href + '/');
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                      active
-                        ? 'text-foreground font-medium bg-accent'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+          <nav className="hidden sm:flex items-center gap-1">
+            {[
+              { href: '/courses',      label: t('nav.courses') },
+              { href: '/faq',          label: t('nav.faq')     },
+              ...(user?.role === 'ADMIN' ? [{ href: '/admin/stats', label: t('nav.admin') }] : []),
+            ].map(({ href, label }) => {
+              const active = pathname === href || pathname.startsWith(href + '/');
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    active
+                      ? 'text-foreground font-medium bg-accent'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
         {/* Right side */}
@@ -162,19 +161,24 @@ export default function Header() {
               <Link
                 href="/profile"
                 title={user.fullName}
-                className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border hover:ring-2 hover:ring-foreground transition-all flex items-center justify-center bg-muted shrink-0"
+                className="group relative w-8 h-8 rounded-full overflow-hidden ring-1 ring-border hover:ring-2 hover:ring-foreground/50 hover:shadow-[0_4px_16px_rgba(0,0,0,0.22)] transition-all flex items-center justify-center bg-muted shrink-0"
               >
                 {user.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
                     alt={user.fullName}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
                   />
                 ) : (
                   <span className="text-xs font-semibold text-foreground select-none">
                     {user.fullName.charAt(0).toUpperCase()}
                   </span>
                 )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-150" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1c0-3.33-6.67-5-10-5z"/>
+                  </svg>
+                </div>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
                 {t('common.signOut')}

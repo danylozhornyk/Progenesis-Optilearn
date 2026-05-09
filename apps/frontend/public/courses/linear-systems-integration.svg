@@ -1,0 +1,66 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(165,180,252,0.55)"/>
+      <stop offset="100%" stop-color="rgba(165,180,252,0.10)"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Background decoration -->
+  <circle cx="680" cy="80"  r="130" fill="white" opacity="0.04"/>
+  <circle cx="110" cy="430" r="110" fill="white" opacity="0.04"/>
+
+  <!-- X-axis at y=380 -->
+  <line x1="80"  y1="380" x2="720" y2="380" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+  <path d="M716,373 L732,380 L716,387 Z" fill="rgba(255,255,255,0.4)"/>
+  <!-- Y-axis at x=100 -->
+  <line x1="100" y1="395" x2="100" y2="100" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+  <path d="M93,104 L100,88 L107,104 Z" fill="rgba(255,255,255,0.4)"/>
+
+  <!-- Smooth bell curve: peaks at x=400, y≈130; baseline y=380 -->
+  <!-- Gaussian-ish: M 130,378 C 180,370 250,230 330,155 C 370,118 430,118 470,155 C 550,230 620,370 670,378 -->
+  <path id="curve" d="M 130,378 C 185,372 255,235 330,158 C 368,120 432,120 470,158 C 545,235 615,372 670,378"
+        fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Trapezoidal rectangles (numerical integration) — 8 strips from x=175 to x=625 -->
+  <!-- Strip width = 56.25; I'll draw 8 rectangles -->
+  <!-- Heights approximated from the bell curve at strip midpoints -->
+  <!-- Strips at: 175,231,287,343,399,455,511,567 (left edges); right edges +56 -->
+  <!-- Bell y at x: approx height above baseline = 250*(1-((x-400)/190)^2)^2 type shape -->
+  <!-- Let me use pre-computed approx heights for the 8 strips -->
+  <!-- x midpoints: 203, 259, 315, 371, 429, 485, 541, 597 -->
+  <!-- Heights (curve y): ~363, ~325, ~230, ~148, ~148, ~230, ~325, ~363 -->
+  <!-- Rectangle top = 380 - height; bottom = 380 -->
+
+  <g opacity="0.45">
+    <rect x="175" y="363" width="56" height="17" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="231" y="325" width="56" height="55" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="287" y="230" width="56" height="150" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="343" y="148" width="56" height="232" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="399" y="148" width="56" height="232" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="455" y="230" width="56" height="150" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="511" y="325" width="56" height="55" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+    <rect x="567" y="363" width="56" height="17" fill="url(#fill)" stroke="rgba(165,180,252,0.7)" stroke-width="1"/>
+  </g>
+
+  <!-- Curve drawn again on top of rectangles -->
+  <path d="M 130,378 C 185,372 255,235 330,158 C 368,120 432,120 470,158 C 545,235 615,372 670,378"
+        fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Integration bounds markers -->
+  <g stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="5,4">
+    <line x1="175" y1="380" x2="175" y2="100"/>
+    <line x1="623" y1="380" x2="623" y2="100"/>
+  </g>
+  <text x="175" y="398" text-anchor="middle" font-size="16" font-family="serif" fill="rgba(255,255,255,0.7)">a</text>
+  <text x="623" y="398" text-anchor="middle" font-size="16" font-family="serif" fill="rgba(255,255,255,0.7)">b</text>
+
+  <!-- Integral symbol decoration -->
+  <text x="695" y="250" font-size="70" font-family="serif" fill="rgba(255,255,255,0.2)" text-anchor="middle">∫</text>
+</svg>

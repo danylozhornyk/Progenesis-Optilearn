@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import katex from 'katex';
 import { useT } from '@/lib/i18n';
 import { api } from '@/lib/api';
@@ -57,13 +57,72 @@ function GraphBlockRenderer({ graphId }: { graphId: string }) {
 
   const title = (locale === 'uk' && graph.titleUk) ? graph.titleUk : graph.title;
   return (
-    <div className="space-y-1.5 my-2">
+    <div className="space-y-1.5 my-2 flex flex-col items-center">
       <GraphRenderer graph={graph} height={280} />
       {title && (
         <p className="text-[11px] text-muted-foreground italic text-center">{title}</p>
       )}
     </div>
   );
+}
+
+/**
+ * Parses a plain-text block value into paragraphs and lists.
+ *
+ * Rules (applied line by line):
+ *   - Blank line           → ends the current segment
+ *   - Line starting with   `- `, `* `, or `+ ` → unordered list item
+ *   - Line starting with   `\d+. `              → ordered list item
+ *   - Everything else      → paragraph (consecutive lines joined with <br>)
+ */
+function renderTextBlock(value: string) {
+  type Seg =
+    | { type: 'p';  lines: string[] }
+    | { type: 'ul'; items: string[] }
+    | { type: 'ol'; items: string[] };
+
+  const segments: Seg[] = [];
+  let cur: Seg | null = null;
+
+  for (const raw of value.split('\n')) {
+    if (raw.trim() === '') { cur = null; continue; }
+
+    const ul = raw.match(/^[-*+]\s+(.*)/);
+    const ol = raw.match(/^\d+\.\s+(.*)/);
+
+    if (ul) {
+      if (cur?.type !== 'ul') { cur = { type: 'ul', items: [] }; segments.push(cur); }
+      cur.items.push(ul[1]);
+    } else if (ol) {
+      if (cur?.type !== 'ol') { cur = { type: 'ol', items: [] }; segments.push(cur); }
+      cur.items.push(ol[1]);
+    } else {
+      if (cur?.type !== 'p') { cur = { type: 'p', lines: [] }; segments.push(cur); }
+      cur.lines.push(raw);
+    }
+  }
+
+  return segments.map((seg, i) => {
+    if (seg.type === 'ul')
+      return (
+        <ul key={i} className="list-disc list-outside pl-5 space-y-1 text-sm text-muted-foreground leading-relaxed text-justify">
+          {seg.items.map((item, j) => <li key={j}>{item}</li>)}
+        </ul>
+      );
+    if (seg.type === 'ol')
+      return (
+        <ol key={i} className="list-decimal list-outside pl-5 space-y-1 text-sm text-muted-foreground leading-relaxed text-justify">
+          {seg.items.map((item, j) => <li key={j}>{item}</li>)}
+        </ol>
+      );
+    return (
+      <p key={i} className="text-sm text-muted-foreground leading-relaxed text-justify">
+        {seg.lines.map((line, j) => (
+          <Fragment key={j}>{j > 0 && <br />}{line}</Fragment>
+        ))}
+      </p>
+    );
+  });
 }
 
 /**
@@ -79,7 +138,7 @@ export function ContentRenderer({ blocks }: { blocks: ContentBlock[] }) {
 
           case 'image':
             return (
-              <figure key={i} className="my-2 space-y-1">
+              <figure key={i} className="my-2 space-y-1 flex flex-col items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={block.url}
@@ -107,9 +166,9 @@ export function ContentRenderer({ blocks }: { blocks: ContentBlock[] }) {
           default:
             // 'text' and any unknown future types
             return (
-              <p key={i} className="text-sm text-muted-foreground leading-relaxed">
-                {(block as { value: string }).value}
-              </p>
+              <div key={i} className="space-y-3">
+                {renderTextBlock((block as { value: string }).value)}
+              </div>
             );
         }
       })}

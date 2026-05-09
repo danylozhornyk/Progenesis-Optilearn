@@ -172,7 +172,10 @@ export function TestStructureEditor({ testId, testTitle, onClose }: Props) {
   const addTask = () => setTasks([...tasks, defaultTask()]);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-14 z-[60] flex flex-col bg-background">
+    <div className="fixed inset-0 z-40 flex flex-col bg-background">
+
+      {/* Spacer: site header (sticky, z-50) renders on top; this reserves its height */}
+      <div className="h-14 shrink-0" aria-hidden="true" />
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 h-12 border-b border-border shrink-0 bg-background">

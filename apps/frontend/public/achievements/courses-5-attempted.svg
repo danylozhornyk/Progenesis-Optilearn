@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Pentagon arrangement of 5 dots -->
+  <circle cx="32" cy="12" r="5" fill="white"/>
+  <circle cx="54" cy="28" r="5" fill="white"/>
+  <circle cx="46" cy="52" r="5" fill="white"/>
+  <circle cx="18" cy="52" r="5" fill="white"/>
+  <circle cx="10" cy="28" r="5" fill="white"/>
+  <polygon points="32,12 54,28 46,52 18,52 10,28" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-opacity="0.5"/>
+</svg>

@@ -22,7 +22,7 @@
  * Language toggle (EN / UK) switches which content array is being edited.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useT } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -80,6 +80,67 @@ async function hydrateBlocks(blocks: ContentBlock[]): Promise<ContentBlock[]> {
 /** Strip editor-only fields from each graph block before persisting. */
 function slimBlocks(blocks: ContentBlock[]): ContentBlock[] {
   return blocks.map((b) => b.type === 'graph' ? { type: 'graph', graphId: b.graphId } : b);
+}
+
+/** Hoverable divider between blocks that expands to show "insert block" buttons. */
+function InsertZone({ onInsert }: { onInsert: (type: BlockType) => void }) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    if (!open) return;
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative flex items-center group">
+      {/* Collapsed: full-width clickable strip with a centered "+" label */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          title={t('admin.lessonEditor.addBlock')}
+          className="flex w-full items-center gap-2 py-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+        >
+          <div className="flex-1 h-px bg-border" />
+          <span className="shrink-0 px-2.5 py-0.5 rounded-full border border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground text-xs font-bold transition-colors">
+            + {t('admin.lessonEditor.addBlock')}
+          </span>
+          <div className="flex-1 h-px bg-border" />
+        </button>
+      )}
+
+      {/* Expanded: block type buttons */}
+      {open && (
+        <div className="flex w-full items-center gap-1.5 px-1 py-1 bg-muted/30 rounded border border-border flex-wrap">
+          <span className="text-xs text-muted-foreground font-medium mr-1 shrink-0">
+            {t('admin.lessonEditor.addBlock')}:
+          </span>
+          {BLOCK_TYPES.map((type) => (
+            <button
+              key={type}
+              onClick={() => { onInsert(type); setOpen(false); }}
+              className="px-2 py-0.5 rounded border border-border bg-background text-xs hover:bg-accent transition-colors"
+            >
+              + {t(`admin.lessonEditor.blockTypes.${type}`)}
+            </button>
+          ))}
+          <button
+            onClick={() => setOpen(false)}
+            className="ml-auto text-xs text-muted-foreground hover:text-foreground px-1"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface Props {
@@ -175,6 +236,33 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
     }
   }
 
+  /** Insert a block immediately after position `afterIndex`. */
+  async function addBlockAfter(afterIndex: number, type: BlockType) {
+    if (type !== 'graph') {
+      const next = [...blocks];
+      next.splice(afterIndex + 1, 0, defaultBlock(type));
+      setBlocks(next);
+      return;
+    }
+    try {
+      const created = await api.post<{ id: string }>('/graphs', DEFAULT_GRAPH_PAYLOAD);
+      const block: GraphBlock = {
+        type: 'graph',
+        graphId: created.id,
+        title: DEFAULT_GRAPH_PAYLOAD.title,
+        titleUk: DEFAULT_GRAPH_PAYLOAD.titleUk,
+        directed: false,
+        vertices: [...DEFAULT_GRAPH_PAYLOAD.vertices],
+        edges:    [...DEFAULT_GRAPH_PAYLOAD.edges],
+      };
+      const next = [...blocks];
+      next.splice(afterIndex + 1, 0, block);
+      setBlocks(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('admin.lessonEditor.errorSave'));
+    }
+  }
+
   const updateBlock    = (i: number, b: ContentBlock)    => setBlocks(blocks.map((x, idx) => idx === i ? b : x));
 
   /** Delete the underlying Graph row when a graph block is removed. */
@@ -227,7 +315,10 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-14 z-[60] flex flex-col bg-background">
+    <div className="fixed inset-0 z-40 flex flex-col bg-background">
+
+      {/* Spacer: site header (sticky, z-50) renders on top; this reserves its height */}
+      <div className="h-14 shrink-0" aria-hidden="true" />
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 h-12 border-b border-border shrink-0 bg-background">
@@ -296,7 +387,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
             </div>
 
             {/* Block list */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4">
               {blocks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground select-none">
                   <span className="text-4xl mb-3 opacity-20">⊞</span>
@@ -305,17 +396,19 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
                 </div>
               ) : (
                 blocks.map((block, i) => (
-                  <BlockWrapper
-                    key={i}
-                    block={block}
-                    index={i}
-                    total={blocks.length}
-                    onChange={(b) => updateBlock(i, b)}
-                    onRemove={() => removeBlock(i)}
-                    onMoveUp={() => moveBlock(i, -1)}
-                    onMoveDown={() => moveBlock(i, 1)}
-                    onDuplicate={() => duplicateBlock(i)}
-                  />
+                  <div key={i}>
+                    <BlockWrapper
+                      block={block}
+                      index={i}
+                      total={blocks.length}
+                      onChange={(b) => updateBlock(i, b)}
+                      onRemove={() => removeBlock(i)}
+                      onMoveUp={() => moveBlock(i, -1)}
+                      onMoveDown={() => moveBlock(i, 1)}
+                      onDuplicate={() => duplicateBlock(i)}
+                    />
+                    <InsertZone onInsert={(type) => addBlockAfter(i, type)} />
+                  </div>
                 ))
               )}
             </div>

@@ -1,0 +1,79 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#450a0a"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(252,165,165,0.25)"/>
+      <stop offset="100%" stop-color="rgba(252,165,165,0.05)"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="rgba(255,255,255,0.7)"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Background decoration -->
+  <circle cx="680" cy="80"  r="130" fill="white" opacity="0.04"/>
+  <circle cx="100" cy="440" r="110" fill="white" opacity="0.04"/>
+
+  <!-- X-axis at y=390 -->
+  <line x1="80" y1="390" x2="720" y2="390" stroke="rgba(255,255,255,0.4)" stroke-width="1.8"/>
+  <path d="M716,384 L730,390 L716,396 Z" fill="rgba(255,255,255,0.4)"/>
+
+  <!-- Non-convex landscape curve (filled) -->
+  <!-- The curve has:
+       - local min 1 near x=210, y≈330
+       - local max near x=310, y≈200
+       - GLOBAL min near x=430, y≈370 (deepest valley)
+       - local max near x=540, y≈220
+       - local min 2 near x=640, y≈320
+  -->
+  <path d="M 90,280 C 120,250 155,210 175,240 C 190,260 200,330 210,332
+           C 225,334 255,195 310,195 C 340,195 365,330 430,372
+           C 460,380 490,230 540,222 C 575,216 600,290 640,320
+           C 665,337 690,380 710,390 L 710,390 L 90,390 Z"
+        fill="url(#fill)"/>
+
+  <!-- The same curve (outline only, bright) -->
+  <path d="M 90,280 C 120,250 155,210 175,240 C 190,260 200,330 210,332
+           C 225,334 255,195 310,195 C 340,195 365,330 430,372
+           C 460,380 490,230 540,222 C 575,216 600,290 640,320
+           C 665,337 690,380 710,390"
+        fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Local minima markers (small white circles) -->
+  <circle cx="210" cy="332" r="8"  fill="white" opacity="0.7"/>
+  <circle cx="640" cy="320" r="8"  fill="white" opacity="0.7"/>
+
+  <!-- Global minimum star (gold) at (430, 372) -->
+  <!-- Star shape using polygon -->
+  <g transform="translate(430,372)">
+    <polygon points="0,-16 4,-6 14,-6 7,1 10,12 0,6 -10,12 -7,1 -14,-6 -4,-6"
+             fill="#fbbf24" stroke="white" stroke-width="1.5"/>
+  </g>
+
+  <!-- Gradient descent path getting "trapped" in local min 1 -->
+  <!-- Arrow sequence converging to local min 1 at (210,332) from the right side -->
+  <g stroke="rgba(255,255,255,0.6)" stroke-width="2" marker-end="url(#arr)">
+    <line x1="285" y1="230" x2="258" y2="248"/>
+    <line x1="247" y1="255" x2="230" y2="278"/>
+    <line x1="222" y1="300" x2="215" y2="322"/>
+  </g>
+
+  <!-- Red X over local min 1 (showing it's a trap) -->
+  <g stroke="#f87171" stroke-width="2.5" stroke-linecap="round">
+    <line x1="202" y1="324" x2="218" y2="340"/>
+    <line x1="218" y1="324" x2="202" y2="340"/>
+  </g>
+
+  <!-- Labels -->
+  <text x="210" y="318" text-anchor="middle" font-size="13" font-family="sans-serif" fill="rgba(255,255,255,0.65)">local min</text>
+  <text x="640" y="305" text-anchor="middle" font-size="13" font-family="sans-serif" fill="rgba(255,255,255,0.65)">local min</text>
+  <text x="430" y="406" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#fbbf24">global min</text>
+
+  <!-- Dashed vertical line from global min to x-axis -->
+  <line x1="430" y1="372" x2="430" y2="390" stroke="rgba(251,191,36,0.5)" stroke-width="1.5" stroke-dasharray="4,3"/>
+</svg>

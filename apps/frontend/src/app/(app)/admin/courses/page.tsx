@@ -17,6 +17,7 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ImageUploadInput } from '@/components/ImageUploadInput';
 
 type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 type Status     = 'DRAFT' | 'PUBLISHED';
@@ -34,6 +35,7 @@ interface AdminCourse {
   isVisible: boolean;
   authorId: string;
   createdAt: string;
+  coverImageUrl: string | null;
 }
 
 interface CourseFormState {
@@ -45,6 +47,7 @@ interface CourseFormState {
   discipline: string;
   disciplineUk: string;
   difficulty: Difficulty;
+  coverImageUrl: string;
 }
 
 const EMPTY_FORM: CourseFormState = {
@@ -55,6 +58,7 @@ const EMPTY_FORM: CourseFormState = {
   discipline: '',
   disciplineUk: '',
   difficulty: 'BEGINNER',
+  coverImageUrl: '',
 };
 
 export default function AdminCoursesPage() {
@@ -82,13 +86,14 @@ export default function AdminCoursesPage() {
     setError('');
     try {
       const payload = {
-        title:         form.title,
-        titleUk:       form.titleUk       || null,
-        description:   form.description,
-        descriptionUk: form.descriptionUk || null,
-        discipline:    form.discipline,
-        disciplineUk:  form.disciplineUk  || null,
-        difficulty:    form.difficulty,
+        title:          form.title,
+        titleUk:        form.titleUk        || null,
+        description:    form.description,
+        descriptionUk:  form.descriptionUk  || null,
+        discipline:     form.discipline,
+        disciplineUk:   form.disciplineUk   || null,
+        difficulty:     form.difficulty,
+        coverImageUrl:  form.coverImageUrl  || null,
         // status / isVisible are intentionally omitted:
         //   • on create — backend enforces DRAFT + isVisible:false
         //   • on edit   — preserve whatever the current status is
@@ -162,6 +167,7 @@ export default function AdminCoursesPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
+                <th className="text-left px-4 py-2.5 font-medium w-10">{t('admin.courses.colCover')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.courses.colTitle')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.courses.colDiscipline')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.courses.colDifficulty')}</th>
@@ -174,6 +180,18 @@ export default function AdminCoursesPage() {
                 const isPublishing = publishing === c.id;
                 return (
                   <tr key={c.id} className="border-t border-border hover:bg-muted/20">
+                    <td className="px-4 py-3">
+                      {c.coverImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={c.coverImageUrl} alt="" className="h-8 w-12 object-cover rounded" />
+                      ) : (
+                        <div className="h-8 w-12 rounded bg-muted flex items-center justify-center">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground" aria-hidden>
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                          </svg>
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-medium">{c.title}</td>
                     <td className="px-4 py-3 text-muted-foreground">{c.discipline}</td>
                     <td className="px-4 py-3">
@@ -219,6 +237,7 @@ export default function AdminCoursesPage() {
                           discipline: c.discipline,
                           disciplineUk: c.disciplineUk ?? '',
                           difficulty: c.difficulty,
+                          coverImageUrl: c.coverImageUrl ?? '',
                         })}
                       >
                         {t('common.edit')}
@@ -301,6 +320,23 @@ export default function AdminCoursesPage() {
                 </select>
               </Field>
             </div>
+
+            <Field label={t('admin.courses.fCoverImageUrl')}>
+              <ImageUploadInput
+                value={form.coverImageUrl}
+                onChange={(url) => setForm({ ...form, coverImageUrl: url })}
+                placeholder={t('admin.courses.fCoverImageUrlPlaceholder')}
+              />
+              {form.coverImageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={form.coverImageUrl}
+                  alt=""
+                  className="mt-2 h-24 w-auto max-w-full rounded object-cover"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                />
+              )}
+            </Field>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button variant="ghost" onClick={() => setForm(null)} disabled={saving}>
