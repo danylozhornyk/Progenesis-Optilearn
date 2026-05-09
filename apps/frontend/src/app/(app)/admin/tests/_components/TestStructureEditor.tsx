@@ -99,9 +99,10 @@ export function TestStructureEditor({ testId, testTitle, onClose }: Props) {
    * accumulate orphaned graphs.
    */
   const removeTask    = (i: number) => {
-    const t = tasks[i];
-    if (t.graph?.graphId) {
-      api.delete(`/graphs/${t.graph.graphId}`).catch(() => {});
+    if (!confirm(t('admin.testEditor.deleteTaskConfirm', { n: String(i + 1) }))) return;
+    const task = tasks[i];
+    if (task.graph?.graphId) {
+      api.delete(`/graphs/${task.graph.graphId}`).catch(() => {});
     }
     setTasks(tasks.filter((_, idx) => idx !== i));
   };
@@ -178,7 +179,7 @@ export function TestStructureEditor({ testId, testTitle, onClose }: Props) {
       <div className="h-14 shrink-0" aria-hidden="true" />
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-5 h-12 border-b border-border shrink-0 bg-background">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-5 py-2 border-b border-border shrink-0 bg-background">
         <div className="flex-1 min-w-0">
           <span className="text-xs text-muted-foreground">{t('admin.testEditor.headerTitle')} · </span>
           <span className="text-sm font-semibold">{testTitle}</span>
@@ -202,7 +203,7 @@ export function TestStructureEditor({ testId, testTitle, onClose }: Props) {
         </div>
 
         {error && (
-          <span className="text-xs text-red-500 max-w-[260px] truncate" title={error}>
+          <span className="text-xs text-red-500 max-w-[140px] sm:max-w-[260px] truncate" title={error}>
             {error}
           </span>
         )}
@@ -222,7 +223,7 @@ export function TestStructureEditor({ testId, testTitle, onClose }: Props) {
         </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-6 space-y-4">
+          <div className="max-w-4xl mx-auto p-3 sm:p-6 space-y-4">
 
             {/* Add task strip */}
             <div className="flex items-center gap-2">

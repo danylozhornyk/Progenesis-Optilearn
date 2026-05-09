@@ -21,6 +21,7 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TestStructureEditor } from './_components/TestStructureEditor';
+import { Pencil, Trash2, LayoutList } from 'lucide-react';
 
 interface CourseLite {
   id: string;
@@ -85,6 +86,9 @@ export default function AdminTestsPage() {
   const [form, setForm]       = useState<TestFormState | null>(null);
   const [saving, setSaving]   = useState(false);
   const [courseFilter, setCourseFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [page, setPage]     = useState(1);
+  const PAGE_SIZE = 10;
   const [structureTest, setStructureTest] = useState<{ id: string; title: string } | null>(null);
 
   function load() {
@@ -159,29 +163,36 @@ export default function AdminTestsPage() {
     }
   }
 
-  const filtered = courseFilter === 'all'
+  const byCourse = courseFilter === 'all'
     ? tests
     : tests.filter((t) => t.lesson.course.id === courseFilter);
+  const filtered = byCourse.filter((t) =>
+    !search.trim() ||
+    t.title.toLowerCase().includes(search.toLowerCase()) ||
+    (t.titleUk?.toLowerCase().includes(search.toLowerCase()) ?? false)
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{t('admin.tests.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('admin.tests.subtitle')}</p>
         </div>
-        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM, lessonId: lessons[0]?.id ?? '' })}>
+        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM, lessonId: lessons[0]?.id ?? '' })} className="self-start sm:self-auto">
           + {t('admin.tests.add')}
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs uppercase tracking-wide text-muted-foreground">
           {t('admin.tests.filterCourse')}
         </span>
         <select
           value={courseFilter}
-          onChange={(e) => setCourseFilter(e.target.value)}
+          onChange={(e) => { setCourseFilter(e.target.value); setPage(1); }}
           className="h-8 rounded-md border border-input bg-background px-2 text-sm"
         >
           <option value="all">{t('admin.lessons.allCourses')}</option>
@@ -191,6 +202,12 @@ export default function AdminTestsPage() {
             </option>
           ))}
         </select>
+        <Input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder={t('admin.tests.search')}
+          className="h-8 max-w-xs text-sm"
+        />
         <span className="text-xs text-muted-foreground tabular-nums ml-auto">
           {filtered.length} / {tests.length}
         </span>
@@ -204,21 +221,22 @@ export default function AdminTestsPage() {
         ) : filtered.length === 0 ? (
           <div className="p-6 text-sm text-muted-foreground">{t('admin.tests.empty')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <>
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[680px]">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colTitle')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colLesson')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colCourse')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colTasks')}</th>
-                <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colSubmissions')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colPass')}</th>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.tests.colTime')}</th>
                 <th className="text-right px-4 py-2.5 font-medium">{t('admin.tests.colActions')}</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((test) => {
+              {paginated.map((test) => {
                 const testTitle   = (locale === 'uk' && test.titleUk) ? test.titleUk : test.title;
                 const lessonTitle = (locale === 'uk' && test.lesson.titleUk) ? test.lesson.titleUk : test.lesson.title;
                 const courseTitle = (locale === 'uk' && test.lesson.course.titleUk) ? test.lesson.course.titleUk : test.lesson.course.title;
@@ -235,38 +253,56 @@ export default function AdminTestsPage() {
                       <span className="inline-flex px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">{courseTitle}</span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">{test._count.tasks}</td>
-                    <td className="px-4 py-3 text-muted-foreground tabular-nums">{test._count.submissions}</td>
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">{Number(test.passingScore)}%</td>
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">
                       {test.timeLimitMin ? `${test.timeLimitMin}m` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right space-x-1">
-                      <Button size="sm" variant="ghost" onClick={() => setStructureTest({ id: test.id, title: test.title })}>
-                        {t('admin.tests.editStructure')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setForm({
-                        id: test.id,
-                        lessonId: test.lesson.id,
-                        title: test.title,
-                        titleUk: test.titleUk ?? '',
-                        description: test.description ?? '',
-                        descriptionUk: test.descriptionUk ?? '',
-                        timeLimitMin: test.timeLimitMin ?? '',
-                        maxAttempts: test.maxAttempts ?? '',
-                        passingScore: Number(test.passingScore),
-                        shuffleQuestions: test.shuffleQuestions,
-                      })}>
-                        {t('common.edit')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleDelete(test)} className="text-red-600 dark:text-red-400 hover:text-red-700">
-                        {t('common.delete')}
-                      </Button>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col items-end gap-1">
+                        <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setStructureTest({ id: test.id, title: test.title })}>
+                          <LayoutList className="h-3.5 w-3.5" />
+                          {t('admin.tests.editStructure')}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setForm({
+                          id: test.id,
+                          lessonId: test.lesson.id,
+                          title: test.title,
+                          titleUk: test.titleUk ?? '',
+                          description: test.description ?? '',
+                          descriptionUk: test.descriptionUk ?? '',
+                          timeLimitMin: test.timeLimitMin ?? '',
+                          maxAttempts: test.maxAttempts ?? '',
+                          passingScore: Number(test.passingScore),
+                          shuffleQuestions: test.shuffleQuestions,
+                        })}>
+                          <Pencil className="h-3.5 w-3.5" />
+                          {t('common.edit')}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="gap-1.5 text-red-600 dark:text-red-400 hover:text-red-700" onClick={() => handleDelete(test)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {t('common.delete')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-border">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p - 1)} disabled={page === 1}>←</Button>
+                <span className="text-xs tabular-nums px-2 text-muted-foreground">{page} / {totalPages}</span>
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>→</Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 
@@ -309,7 +345,7 @@ export default function AdminTestsPage() {
               )}
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label={t('admin.tests.fTitle')}>
                 <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </Field>
@@ -318,7 +354,7 @@ export default function AdminTestsPage() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label={t('admin.tests.fDescription')}>
                 <textarea
                   value={form.description}
@@ -337,7 +373,7 @@ export default function AdminTestsPage() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label={t('admin.tests.fTimeLimit')}>
                 <Input
                   type="number"
@@ -374,7 +410,7 @@ export default function AdminTestsPage() {
             </div>
 
             <Field label={t('admin.tests.fShuffle')}>
-              <label className="inline-flex items-center gap-2 h-9">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={form.shuffleQuestions}
@@ -382,7 +418,7 @@ export default function AdminTestsPage() {
                   className="h-4 w-4"
                 />
                 <span className="text-sm">{t('admin.tests.fShuffleHint')}</span>
-              </label>
+              </div>
             </Field>
 
             <div className="flex items-center justify-end gap-2 pt-2">

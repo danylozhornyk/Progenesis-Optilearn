@@ -21,6 +21,7 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LessonStructureEditor } from './_components/LessonStructureEditor';
+import { Pencil, Trash2, LayoutList } from 'lucide-react';
 
 interface CourseLite {
   id: string;
@@ -69,6 +70,9 @@ export default function AdminLessonsPage() {
   const [form, setForm]       = useState<LessonFormState | null>(null);
   const [saving, setSaving]   = useState(false);
   const [courseFilter, setCourseFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [page, setPage]     = useState(1);
+  const PAGE_SIZE = 10;
   const [structureLesson, setStructureLesson] = useState<{ id: string; title: string } | null>(null);
 
   function load() {
@@ -123,30 +127,37 @@ export default function AdminLessonsPage() {
     }
   }
 
-  const filtered = courseFilter === 'all'
+  const byCourse = courseFilter === 'all'
     ? lessons
     : lessons.filter((l) => l.course.id === courseFilter);
+  const filtered = byCourse.filter((l) =>
+    !search.trim() ||
+    l.title.toLowerCase().includes(search.toLowerCase()) ||
+    (l.titleUk?.toLowerCase().includes(search.toLowerCase()) ?? false)
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{t('admin.lessons.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('admin.lessons.subtitle')}</p>
         </div>
-        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM, courseId: courses[0]?.id ?? '' })}>
+        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM, courseId: courses[0]?.id ?? '' })} className="self-start sm:self-auto">
           + {t('admin.lessons.add')}
         </Button>
       </div>
 
-      {/* Course filter */}
-      <div className="flex items-center gap-2">
+      {/* Course filter + search */}
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs uppercase tracking-wide text-muted-foreground">
           {t('admin.lessons.filterCourse')}
         </span>
         <select
           value={courseFilter}
-          onChange={(e) => setCourseFilter(e.target.value)}
+          onChange={(e) => { setCourseFilter(e.target.value); setPage(1); }}
           className="h-8 rounded-md border border-input bg-background px-2 text-sm"
         >
           <option value="all">{t('admin.lessons.allCourses')}</option>
@@ -156,6 +167,12 @@ export default function AdminLessonsPage() {
             </option>
           ))}
         </select>
+        <Input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder={t('admin.lessons.search')}
+          className="h-8 max-w-xs text-sm"
+        />
         <span className="text-xs text-muted-foreground tabular-nums ml-auto">
           {filtered.length} / {lessons.length}
         </span>
@@ -169,7 +186,9 @@ export default function AdminLessonsPage() {
         ) : filtered.length === 0 ? (
           <div className="p-6 text-sm text-muted-foreground">{t('admin.lessons.empty')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <>
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[680px]">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium w-12">#</th>
@@ -182,7 +201,7 @@ export default function AdminLessonsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((l) => {
+              {paginated.map((l) => {
                 const courseTitle = (locale === 'uk' && l.course.titleUk) ? l.course.titleUk : l.course.title;
                 const lessonTitle = (locale === 'uk' && l.titleUk) ? l.titleUk : l.title;
                 return (
@@ -199,30 +218,49 @@ export default function AdminLessonsPage() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">{l._count.tests}</td>
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">{l.estimatedMinutes ?? '—'}</td>
-                    <td className="px-4 py-3 text-right space-x-1">
-                      <Button size="sm" variant="ghost" onClick={() => setStructureLesson({ id: l.id, title: l.title })}>
-                        {t('admin.lessons.editStructure')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setForm({
-                        id: l.id,
-                        courseId: l.course.id,
-                        title: l.title,
-                        titleUk: l.titleUk ?? '',
-                        orderIndex: l.orderIndex,
-                        isMandatory: l.isMandatory,
-                        estimatedMinutes: l.estimatedMinutes ?? '',
-                      })}>
-                        {t('common.edit')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleDelete(l)} className="text-red-600 dark:text-red-400 hover:text-red-700">
-                        {t('common.delete')}
-                      </Button>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col items-end gap-1">
+                        <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setStructureLesson({ id: l.id, title: l.title })}>
+                          <LayoutList className="h-3.5 w-3.5" />
+                          {t('admin.lessons.editStructure')}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setForm({
+                          id: l.id,
+                          courseId: l.course.id,
+                          title: l.title,
+                          titleUk: l.titleUk ?? '',
+                          orderIndex: l.orderIndex,
+                          isMandatory: l.isMandatory,
+                          estimatedMinutes: l.estimatedMinutes ?? '',
+                        })}>
+                          <Pencil className="h-3.5 w-3.5" />
+                          {t('common.edit')}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="gap-1.5 text-red-600 dark:text-red-400 hover:text-red-700" onClick={() => handleDelete(l)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {t('common.delete')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-border">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p - 1)} disabled={page === 1}>←</Button>
+                <span className="text-xs tabular-nums px-2 text-muted-foreground">{page} / {totalPages}</span>
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>→</Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 
@@ -261,7 +299,7 @@ export default function AdminLessonsPage() {
               )}
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label={t('admin.lessons.fTitle')}>
                 <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </Field>
@@ -270,13 +308,16 @@ export default function AdminLessonsPage() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label={t('admin.lessons.fOrder')}>
                 <Input
-                  type="number"
-                  min={1}
+                  type="text"
+                  inputMode="numeric"
                   value={form.orderIndex}
-                  onChange={(e) => setForm({ ...form, orderIndex: Number(e.target.value) || 1 })}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    setForm({ ...form, orderIndex: digits === '' ? 0 : parseInt(digits, 10) });
+                  }}
                 />
               </Field>
               <Field label={t('admin.lessons.fMinutes')}>

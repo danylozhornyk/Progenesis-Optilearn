@@ -14,6 +14,72 @@ import { useT } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { EditorGraphEdge, EditorGraphVertex, EditorTaskGraph } from './types';
 
+function runForceLayout(
+  vertices: EditorGraphVertex[],
+  edges: EditorGraphEdge[],
+  CW: number,
+  CH: number,
+  R: number,
+): EditorGraphVertex[] {
+  if (vertices.length < 2) return vertices;
+  const ITERATIONS = 250;
+  const k = Math.sqrt((CW * CH) / vertices.length);
+  let temp = Math.min(CW, CH) / 3;
+  const cx = CW / 2, cy = CH / 2;
+
+  const pos = vertices.map(v => ({ id: v.id, x: v.x, y: v.y }));
+
+  for (let iter = 0; iter < ITERATIONS; iter++) {
+    const disp = pos.map(() => ({ x: 0, y: 0 }));
+
+    // Repulsion between every pair
+    for (let i = 0; i < pos.length; i++) {
+      for (let j = i + 1; j < pos.length; j++) {
+        const dx = pos[i].x - pos[j].x;
+        const dy = pos[i].y - pos[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const f = (k * k) / dist;
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        disp[i].x += fx; disp[i].y += fy;
+        disp[j].x -= fx; disp[j].y -= fy;
+      }
+    }
+
+    // Attraction along edges (spring)
+    for (const edge of edges) {
+      const si = pos.findIndex(p => p.id === edge.source);
+      const ti = pos.findIndex(p => p.id === edge.target);
+      if (si < 0 || ti < 0) continue;
+      const dx = pos[ti].x - pos[si].x;
+      const dy = pos[ti].y - pos[si].y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const f = (dist * dist) / k;
+      const fx = (dx / dist) * f, fy = (dy / dist) * f;
+      disp[si].x += fx; disp[si].y += fy;
+      disp[ti].x -= fx; disp[ti].y -= fy;
+    }
+
+    // Weak gravity toward canvas center
+    for (let i = 0; i < pos.length; i++) {
+      disp[i].x += (cx - pos[i].x) * 0.04;
+      disp[i].y += (cy - pos[i].y) * 0.04;
+    }
+
+    // Apply with temperature cooling and clamp to bounds
+    for (let i = 0; i < pos.length; i++) {
+      const mag = Math.sqrt(disp[i].x ** 2 + disp[i].y ** 2) || 1;
+      pos[i].x += (disp[i].x / mag) * Math.min(mag, temp);
+      pos[i].y += (disp[i].y / mag) * Math.min(mag, temp);
+      pos[i].x = Math.max(R, Math.min(CW - R, pos[i].x));
+      pos[i].y = Math.max(R, Math.min(CH - R, pos[i].y));
+    }
+
+    temp *= 0.95;
+  }
+
+  return vertices.map((v, i) => ({ ...v, x: Math.round(pos[i].x), y: Math.round(pos[i].y) }));
+}
+
 interface Props {
   graph: EditorTaskGraph;
   locale: 'en' | 'uk';
@@ -29,7 +95,7 @@ export function TaskGraphEditor({ graph, locale, onChange }: Props) {
   const [dragOff,  setDragOff]  = useState({ x: 0, y: 0 });
   const [didDrag,  setDidDrag]  = useState(false);
 
-  const CW = 380, CH = 220, R = 14;
+  const CW = 380, CH = 340, R = 14;
 
   const { vertices, edges, directed } = graph;
 
@@ -109,6 +175,11 @@ export function TaskGraphEditor({ graph, locale, onChange }: Props) {
     emit({ vertices: vertices.map((v: EditorGraphVertex) => v.id === id ? { ...v, label } : v) });
   }
 
+  function handleAutoLayout() {
+    if (vertices.length < 2) return;
+    emit({ vertices: runForceLayout(vertices, edges, CW, CH, R) });
+  }
+
   const vMap = new Map(vertices.map((v: EditorGraphVertex) => [v.id, v]));
   const selectedLabel = vertices.find((v: EditorGraphVertex) => v.id === selected)?.label ?? '';
 
@@ -132,7 +203,7 @@ export function TaskGraphEditor({ graph, locale, onChange }: Props) {
       </div>
 
       {/* Canvas */}
-      <div className="rounded-md border border-border overflow-hidden bg-muted/5">
+      <div className="rounded-md border-2 border-input overflow-hidden bg-muted/30">
         <div className="px-3 py-1.5 bg-muted/25 border-b border-border text-xs text-muted-foreground flex items-center gap-2">
           {selected
             ? <>
@@ -143,7 +214,18 @@ export function TaskGraphEditor({ graph, locale, onChange }: Props) {
                   {t('admin.lessonEditor.cancelEdge')}
                 </button>
               </>
-            : <span>{t('admin.lessonEditor.graphCanvasHint')}</span>
+            : <>
+                <span>{t('admin.lessonEditor.graphCanvasHint')}</span>
+                {vertices.length >= 2 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleAutoLayout(); }}
+                    className="ml-auto shrink-0 px-2 py-0.5 rounded border border-border hover:bg-muted hover:text-foreground transition-colors"
+                    title={t('admin.lessonEditor.autoLayout')}
+                  >
+                    {t('admin.lessonEditor.autoLayout')}
+                  </button>
+                )}
+              </>
           }
         </div>
 

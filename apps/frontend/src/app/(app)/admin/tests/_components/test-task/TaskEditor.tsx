@@ -10,6 +10,7 @@ import { useT } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ImageUploadInput } from '@/components/ImageUploadInput';
+import { RichTextarea } from '@/components/RichTextarea';
 
 import { EditorOption, EditorTask, EditorTaskGraph, TaskType } from './types';
 import { newId } from './converters';
@@ -109,7 +110,7 @@ export function TaskEditor({
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-background">
       {/* Card header */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-muted/25 border-b border-border">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-muted/25 border-b border-border">
         <span className="text-xs text-muted-foreground tabular-nums w-6 select-none">
           {index + 1}.
         </span>
@@ -123,7 +124,7 @@ export function TaskEditor({
           ))}
         </select>
 
-        <label className="ml-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {t('admin.testEditor.maxScore')}
           <Input
             type="number"
@@ -148,11 +149,9 @@ export function TaskEditor({
 
         {/* Statement */}
         <Field label={t('admin.testEditor.questionLabel', { locale: locale.toUpperCase() })}>
-          <textarea
+          <RichTextarea
             value={isUk ? task.statementUk : task.statement}
-            onChange={(e) => onChange(isUk
-              ? { statementUk: e.target.value }
-              : { statement:   e.target.value })}
+            onChange={(v) => onChange(isUk ? { statementUk: v } : { statement: v })}
             rows={2}
             placeholder={isUk
               ? t('admin.testEditor.questionPlaceholderUk')
@@ -274,7 +273,7 @@ export function TaskEditor({
 
         {/* Open answer */}
         {task.taskType === 'OPEN_ANSWER' && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label={t('admin.testEditor.correctAnswerLabel')}>
               <Input
                 value={task.openAnswer}

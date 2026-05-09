@@ -7,6 +7,7 @@ export interface LessonAccess {
   passedTestCount: number;
   allTestsPassed: boolean;
   unlocked: boolean;
+  testsUnlocked: boolean;
 }
 
 export interface Lesson {

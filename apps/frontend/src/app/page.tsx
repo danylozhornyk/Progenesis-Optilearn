@@ -130,11 +130,6 @@ export default function LandingPage() {
     { icon: <IcnAward />, titleKey: 'landing.howItWorks.s3title', descKey: 'landing.howItWorks.s3desc' },
   ];
 
-  const aiMetrics = [
-    { labelKey: 'landing.ai.mockStrong', pct: 87, bar: 'bg-green-500', text: 'text-green-600 dark:text-green-400' },
-    { labelKey: 'landing.ai.mockImproving', pct: 62, bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
-    { labelKey: 'landing.ai.mockNeedsPractice', pct: 38, bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
-  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background bg-subtle-gradient">
@@ -325,33 +320,103 @@ export default function LandingPage() {
         <section className="px-6 py-20">
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="order-2 md:order-1 surface rounded-xl p-6 space-y-5">
-                <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
-                    AI
+              <div className="order-2 md:order-1 surface rounded-xl p-5 space-y-4">
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border border-border p-3 flex flex-col gap-1.5">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    <p className="text-base font-bold text-foreground leading-none">20</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{t('profile.recommendations.stats.attempts')}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{t('landing.ai.mockTitle')}</p>
-                    <p className="text-xs text-muted-foreground">{t('landing.ai.mockSub')}</p>
+                  <div className="rounded-lg border border-border p-3 flex flex-col gap-1.5 bg-foreground/[0.04]">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <p className="text-base font-bold text-foreground leading-none">74.2%</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{t('profile.recommendations.stats.avgScore')}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 flex flex-col gap-1.5 bg-foreground/[0.04]">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    <p className="text-base font-bold text-foreground leading-none">65.0%</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{t('profile.recommendations.stats.passRate')}</p>
                   </div>
                 </div>
-                <div className="space-y-3.5">
-                  {aiMetrics.map(({ labelKey, pct, bar, text }) => (
-                    <div key={labelKey} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">{t(labelKey)}</span>
-                        <span className={`text-xs font-semibold ${text}`}>{pct}%</span>
-                      </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full ${bar} rounded-full`} style={{ width: `${pct}%` }} />
-                      </div>
+
+                {/* Summary */}
+                <div className="pl-3 border-l-2 border-foreground/20">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1">
+                    {t('profile.recommendations.summary')}
+                  </p>
+                  <p className="text-sm text-foreground leading-relaxed text-justify">{t('landing.ai.mockSummary')}</p>
+                </div>
+
+                {/* Strong / weak panels */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border p-3 space-y-2 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/40">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{t('profile.recommendations.strongPoints')}</p>
                     </div>
-                  ))}
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{t('landing.ai.mockStrong')}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed text-justify">{t('landing.ai.mockStrongDetail')}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-3 space-y-2 bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{t('profile.recommendations.weakPoints')}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{t('landing.ai.mockNeedsPractice')}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed text-justify">{t('landing.ai.mockWeakDetail')}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="pt-2 border-t border-border space-y-1.5">
-                  <p className="text-xs font-semibold text-foreground">{t('landing.ai.mockRecLabel')}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{t('landing.ai.mockRecText')}</p>
+
+                {/* Roadmap */}
+                <div className="space-y-1.5">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                    {t('profile.recommendations.roadmap')}
+                  </p>
+                  {/* Step 1 */}
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold shrink-0">1</div>
+                      <div className="w-px flex-1 bg-border mt-1 min-h-[20px]" />
+                    </div>
+                    <div className="flex-1 min-w-0 pb-3">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <p className="text-sm font-semibold text-foreground">{t('landing.ai.mockRecLabel')}</p>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                          {t('profile.recommendations.priority.HIGH')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed text-justify">{t('landing.ai.mockRecText')}</p>
+                    </div>
+                  </div>
+                  {/* Step 2 */}
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold shrink-0">2</div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <p className="text-sm font-semibold text-foreground">{t('landing.ai.mockStep2Title')}</p>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                          {t('profile.recommendations.priority.MEDIUM')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed text-justify">{t('landing.ai.mockStep2Desc')}</p>
+                    </div>
+                  </div>
                 </div>
+
               </div>
 
               <div className="order-1 md:order-2 space-y-6">

@@ -64,7 +64,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        <div className="relative flex items-center gap-2">
+        <Link href="/" className="relative flex items-center gap-2 hover:opacity-80 transition-opacity">
           <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <line x1="3" y1="17" x2="10" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
             <line x1="10" y1="10" x2="17" y2="3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
@@ -73,7 +73,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <circle cx="17" cy="3" r="1.5" fill="white"/>
           </svg>
           <span className="font-semibold text-lg tracking-tight">{t('common.appName')}</span>
-        </div>
+        </Link>
 
         <div className="relative space-y-6">
           <div className="w-8 h-px bg-zinc-600" />

@@ -9,6 +9,7 @@ import {
   Histogram,
 } from 'prom-client';
 import { connectRedis } from './cache/redis';
+import { prisma } from './db/prisma';
 
 import authRouter from './routes/auth.routes';
 import coursesRouter from './routes/courses.routes';
@@ -129,6 +130,7 @@ app.use((_req, res) => {
 // ── Start ─────────────────────────────────────────────────────
 async function start() {
   await connectRedis();
+  await prisma.$connect();
   await initStorage();
   app.listen(PORT, () => {
     console.log(`Backend running on http://localhost:${PORT}`);

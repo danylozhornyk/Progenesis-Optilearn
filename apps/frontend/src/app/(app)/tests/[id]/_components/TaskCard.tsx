@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import GraphRenderer from '@/components/GraphRenderer';
 import { CheckIcon, XIcon } from './icons';
 import type { Task, UserAnswer, GradedAnswer, HintEntry, HintResponse } from './types';
+import { renderInline } from '@/lib/richText';
 
 /**
  * One question card. Renders the prompt, optional graph, the appropriate
@@ -78,7 +79,7 @@ export function TaskCard({
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 flex-1">
           <p className="text-xs text-muted-foreground">{t('test.question', { n: index + 1 })}</p>
-          <p className="text-sm font-medium text-foreground leading-relaxed">{statement}</p>
+          <p className="text-sm font-medium text-foreground leading-relaxed">{renderInline(statement)}</p>
         </div>
         {result !== undefined && (
           <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${

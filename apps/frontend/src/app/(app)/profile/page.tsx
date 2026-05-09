@@ -38,13 +38,13 @@ export default function ProfilePage() {
         <ProfileHeader />
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-border mb-6">
+        <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto scrollbar-none">
           {(['personal', 'progress', 'achievements', 'recommendations'] as Tab[]).map((tabKey) => (
             <button
               key={tabKey}
               type="button"
               onClick={() => setTab(tabKey)}
-              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`px-2 sm:px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px shrink-0 ${
                 tab === tabKey
                   ? 'border-foreground text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'

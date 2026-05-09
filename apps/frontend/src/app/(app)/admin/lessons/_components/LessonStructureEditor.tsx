@@ -105,7 +105,7 @@ function InsertZone({ onInsert }: { onInsert: (type: BlockType) => void }) {
         <button
           onClick={() => setOpen(true)}
           title={t('admin.lessonEditor.addBlock')}
-          className="flex w-full items-center gap-2 py-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          className="flex w-full items-center gap-2 py-2 px-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer"
         >
           <div className="flex-1 h-px bg-border" />
           <span className="shrink-0 px-2.5 py-0.5 rounded-full border border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground text-xs font-bold transition-colors">
@@ -158,6 +158,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState('');
   const [showPrev, setShowPrev] = useState(true);
+  const [mobilePanel, setMobilePanel] = useState<'edit' | 'preview'>('edit');
 
   const blocks    = locale === 'en' ? enBlocks : ukBlocks;
   const setBlocks = locale === 'en' ? setEnBlocks : setUkBlocks;
@@ -267,6 +268,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
 
   /** Delete the underlying Graph row when a graph block is removed. */
   async function removeBlock(i: number) {
+    if (!confirm(t('admin.lessonEditor.deleteBlockConfirm'))) return;
     const b = blocks[i];
     setBlocks(blocks.filter((_, idx) => idx !== i));
     if (b.type === 'graph' && b.graphId) {
@@ -321,7 +323,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
       <div className="h-14 shrink-0" aria-hidden="true" />
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-5 h-12 border-b border-border shrink-0 bg-background">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-5 py-2 border-b border-border shrink-0 bg-background">
         <div className="flex-1 min-w-0">
           <span className="text-xs text-muted-foreground">{t('admin.lessonEditor.headerTitle')} · </span>
           <span className="text-sm font-semibold">{lessonTitle}</span>
@@ -344,7 +346,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
 
         <button
           onClick={() => setShowPrev(!showPrev)}
-          className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition-colors"
+          className="hidden sm:block text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition-colors"
         >
           {showPrev ? t('admin.lessonEditor.hidePreview') : t('admin.lessonEditor.showPreview')}
         </button>
@@ -367,10 +369,32 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
           {t('admin.lessonEditor.loading')}
         </div>
       ) : (
-        <div className={`flex-1 min-h-0 flex overflow-hidden ${showPrev ? 'divide-x divide-border' : ''}`}>
+        <>
+          {/* Mobile: Edit / Preview tab switcher */}
+          <div className="sm:hidden flex border-b border-border shrink-0">
+            {(['edit', 'preview'] as const).map((panel) => (
+              <button
+                key={panel}
+                onClick={() => setMobilePanel(panel)}
+                className={`flex-1 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                  mobilePanel === panel
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                {panel === 'edit' ? t('common.edit') : t('admin.lessonEditor.preview')}
+              </button>
+            ))}
+          </div>
+
+          <div className={`flex-1 min-h-0 flex overflow-hidden ${showPrev ? 'sm:divide-x sm:divide-border' : ''}`}>
 
           {/* Editor panel */}
-          <div className={`flex flex-col min-h-0 ${showPrev ? 'w-[58%]' : 'w-full'}`}>
+          <div className={[
+            'flex-col min-h-0',
+            mobilePanel === 'preview' ? 'hidden sm:flex' : 'flex',
+            showPrev ? 'sm:w-[58%] w-full' : 'w-full',
+          ].join(' ')}>
 
             {/* Add block strip */}
             <div className="flex items-center gap-1.5 px-4 py-2 bg-muted/20 border-b border-border shrink-0 flex-wrap">
@@ -416,7 +440,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
 
           {/* Preview panel */}
           {showPrev && (
-            <div className="w-[42%] min-h-0 flex flex-col">
+            <div className={`flex-col min-h-0 w-full sm:w-[42%] ${mobilePanel === 'edit' ? 'hidden sm:flex' : 'flex'}`}>
               <div className="px-4 py-2 bg-muted/20 border-b border-border shrink-0 flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('admin.lessonEditor.preview')}
@@ -440,6 +464,7 @@ export function LessonStructureEditor({ lessonId, lessonTitle, onClose }: Props)
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );

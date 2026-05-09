@@ -51,16 +51,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
         {/* Sub-tab strip */}
-        <div className="flex items-center gap-1 mb-6 border-b border-border">
+        <div className="flex items-center gap-1 mb-6 border-b border-border overflow-x-auto scrollbar-none">
           {tabs.map(({ href, label }) => {
             const active = pathname === href || pathname.startsWith(href + '/');
             return (
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-2 text-sm border-b-2 -mb-px transition-colors ${
+                className={`px-3 py-2 text-sm border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0 ${
                   active
                     ? 'border-foreground text-foreground font-medium'
                     : 'border-transparent text-muted-foreground hover:text-foreground'

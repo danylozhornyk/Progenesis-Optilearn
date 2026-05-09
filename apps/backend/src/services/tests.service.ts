@@ -20,8 +20,8 @@ export async function getTestsByLesson(lessonId: string) {
   return tests;
 }
 
-export function getTestById(id: string) {
-  return prisma.test.findUnique({
+export async function getTestById(id: string) {
+  const test = await prisma.test.findUnique({
     where: { id },
     include: {
       lesson: { select: { id: true, title: true, titleUk: true, course: { select: { id: true } } } },
@@ -31,6 +31,16 @@ export function getTestById(id: string) {
       },
     },
   });
+
+  if (test?.shuffleQuestions && test.tasks.length > 1) {
+    // Fisher-Yates in-place shuffle
+    for (let i = test.tasks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [test.tasks[i], test.tasks[j]] = [test.tasks[j], test.tasks[i]];
+    }
+  }
+
+  return test;
 }
 
 export async function createTest(data: {

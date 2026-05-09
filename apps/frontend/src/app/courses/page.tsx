@@ -6,6 +6,8 @@ import { useT } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Course {
   id: string;
@@ -44,6 +46,20 @@ export default function CoursesPage() {
   const { t, locale } = useT();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch]       = useState('');
+  const [difficulty, setDifficulty] = useState<Course['difficulty'] | 'ALL'>('ALL');
+  const [page, setPage]           = useState(1);
+  const PAGE_SIZE = 9;
+
+  const filtered = courses.filter((c) => {
+    if (difficulty !== 'ALL' && c.difficulty !== difficulty) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const title = (locale === 'uk' && c.titleUk) ? c.titleUk : c.title;
+    return title.toLowerCase().includes(q);
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => {
     api
@@ -60,25 +76,52 @@ export default function CoursesPage() {
       <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 animate-fade-in">
 
         {/* Page header */}
-        <div className="mb-8 space-y-1">
+        <div className="mb-6 space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {t('courses.title')}
           </h1>
           <p className="text-sm text-muted-foreground">{t('courses.subtitle')}</p>
         </div>
 
+        {/* Search + difficulty filter */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <Input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder={t('courses.searchPlaceholder')}
+            className="max-w-sm"
+          />
+          <div className="flex items-center gap-1.5">
+            {(['ALL', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const).map((d) => (
+              <button
+                key={d}
+                onClick={() => { setDifficulty(d); setPage(1); }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  difficulty === d
+                    ? d === 'ALL'
+                      ? 'bg-foreground text-background'
+                      : DIFFICULTY_STYLES[d as Course['difficulty']] + ' ring-1 ring-current'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                }`}
+              >
+                {d === 'ALL' ? t('courses.filterAll') : t(`courses.difficulty.${d}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <CourseCardSkeleton key={i} />
             ))}
           </div>
-        ) : courses.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('courses.empty')}</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => {
+            {paginated.map((course) => {
               const title = (locale === 'uk' && course.titleUk) ? course.titleUk : course.title;
               const description = (locale === 'uk' && course.descriptionUk) ? course.descriptionUk : course.description;
               return (
@@ -135,6 +178,25 @@ export default function CoursesPage() {
                 </Link>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-10">
+            <Button variant="ghost" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}>←</Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <Button
+                key={n}
+                variant={n === page ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPage(n)}
+                className="w-9"
+              >
+                {n}
+              </Button>
+            ))}
+            <Button variant="ghost" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>→</Button>
           </div>
         )}
       </main>

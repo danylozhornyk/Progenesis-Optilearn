@@ -29,7 +29,11 @@ const FAQ_EN: FaqItem[] = [
   },
   {
     q: 'How is my score calculated?',
-    a: 'Each test has a maximum possible score. Your progress percentage is the ratio of points you have earned to the maximum points available across all tests you have attempted.',
+    a: 'Each test has a maximum possible score based on the total points across its tasks. Your attempt number affects how much of that score counts: the first attempt is worth full value (×1.0), the second attempt is multiplied by ×0.8, and any third or later attempt is multiplied by ×0.6. Your overall progress percentage is the ratio of your best weighted score on each test to the total maximum points available across all tests you have attempted.',
+  },
+  {
+    q: 'What happens when I reach the attempt limit on a test?',
+    a: 'If a test has a maximum attempt limit and you use all of them, the platform automatically takes your highest-scoring attempt and counts it as passed. This means you will never be permanently blocked from advancing — you can continue to the next lesson as normal even if none of your attempts met the passing threshold.',
   },
   {
     q: 'Can I change the language or theme?',
@@ -64,7 +68,11 @@ const FAQ_UK: FaqItem[] = [
   },
   {
     q: 'Як розраховується мій результат?',
-    a: 'Кожен тест має максимально можливий бал. Відсоток прогресу — це співвідношення зароблених балів до максимально можливих балів у всіх пройдених тестах.',
+    a: 'Кожен тест має максимально можливий бал на основі суми балів за всі завдання. Кількість спроб впливає на те, яка частина балу зараховується: перша спроба рахується повністю (×1.0), друга — з коефіцієнтом ×0.8, а третя та кожна наступна — з коефіцієнтом ×0.6. Загальний відсоток прогресу — це відношення найкращого зваженого результату з кожного тесту до максимально можливого балу в усіх пройдених тестах.',
+  },
+  {
+    q: 'Що станеться, якщо я вичерпаю ліміт спроб на тесті?',
+    a: 'Якщо тест має обмеження на кількість спроб і ви використали всі з них, платформа автоматично зараховує вашу найвищу за балом спробу як успішно пройдену. Це означає, що ви не будете заблоковані назавжди — ви зможете перейти до наступного уроку в звичайному режимі, навіть якщо жодна зі спроб не досягла порогу проходження.',
   },
   {
     q: 'Чи можна змінити мову або тему оформлення?',

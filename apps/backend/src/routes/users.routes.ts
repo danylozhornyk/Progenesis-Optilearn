@@ -7,6 +7,7 @@ import {
   getUserProgress,
   getDetailedCourseProgress,
 } from '../services/users.service';
+import { requestCourseCertificate } from '../services/certificate.service';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { uploadSingle } from '../middleware/upload.middleware';
 import { storage } from '../storage';
@@ -76,6 +77,25 @@ router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
     res.json(progress);
   } catch {
     res.status(500).json({ error: 'Failed to fetch progress' });
+  }
+});
+
+// ── Request completion certificate ───────────────────────────
+router.post('/:id/certificate/:courseId', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (
+      req.user!.role === 'STUDENT' &&
+      req.user!.userId !== req.params.id
+    ) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    await requestCourseCertificate(req.params.id, req.params.courseId);
+    res.json({ message: 'Certificate sent to your email.' });
+  } catch (err: unknown) {
+    const e = err as { message?: string; status?: number };
+    const status = e.status ?? 500;
+    res.status(status).json({ error: e.message ?? 'Failed to send certificate' });
   }
 });
 

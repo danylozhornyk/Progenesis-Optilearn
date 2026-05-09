@@ -75,7 +75,7 @@ export default function LessonPage() {
     api.post(`/courses/${courseId}/enroll`, {}).catch(() => {});
   }, [user, courseId]);
 
-  const isLocked = !!user && access && !access.unlocked;
+  const isLocked = !!user && access != null && !access.testsUnlocked;
 
   if (missing) return notFound();
 
@@ -95,14 +95,16 @@ export default function LessonPage() {
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-10 animate-fade-in">
 
-        {/* Back link */}
-        <Link
-          href={`/courses/${courseId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ArrowLeftIcon />
-          {courseTitle || t('courses.title')}
-        </Link>
+        {/* Back link — sticky below the global header */}
+        <div className="sticky top-14 z-20 bg-background/90 backdrop-blur-sm -mx-6 px-6 py-2 mb-4">
+          <Link
+            href={`/courses/${courseId}`}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeftIcon />
+            {courseTitle || t('courses.title')}
+          </Link>
+        </div>
 
         {loading ? (
           <LessonSkeleton />

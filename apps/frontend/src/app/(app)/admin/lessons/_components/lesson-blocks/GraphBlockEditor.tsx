@@ -17,15 +17,82 @@ import { useT } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { ContentBlock, GraphBlock, GraphVertex, GraphEdge } from './types';
 
+function runForceLayout(
+  vertices: GraphVertex[],
+  edges: GraphEdge[],
+  CW: number,
+  CH: number,
+  R: number,
+): GraphVertex[] {
+  if (vertices.length < 2) return vertices;
+  const ITERATIONS = 250;
+  const k = Math.sqrt((CW * CH) / vertices.length);
+  let temp = Math.min(CW, CH) / 3;
+  const cx = CW / 2, cy = CH / 2;
+
+  const pos = vertices.map(v => ({ id: v.id, x: v.x, y: v.y }));
+
+  for (let iter = 0; iter < ITERATIONS; iter++) {
+    const disp = pos.map(() => ({ x: 0, y: 0 }));
+
+    // Repulsion between every pair
+    for (let i = 0; i < pos.length; i++) {
+      for (let j = i + 1; j < pos.length; j++) {
+        const dx = pos[i].x - pos[j].x;
+        const dy = pos[i].y - pos[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const f = (k * k) / dist;
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        disp[i].x += fx; disp[i].y += fy;
+        disp[j].x -= fx; disp[j].y -= fy;
+      }
+    }
+
+    // Attraction along edges (spring)
+    for (const edge of edges) {
+      const si = pos.findIndex(p => p.id === edge.source);
+      const ti = pos.findIndex(p => p.id === edge.target);
+      if (si < 0 || ti < 0) continue;
+      const dx = pos[ti].x - pos[si].x;
+      const dy = pos[ti].y - pos[si].y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const f = (dist * dist) / k;
+      const fx = (dx / dist) * f, fy = (dy / dist) * f;
+      disp[si].x += fx; disp[si].y += fy;
+      disp[ti].x -= fx; disp[ti].y -= fy;
+    }
+
+    // Weak gravity toward canvas center
+    for (let i = 0; i < pos.length; i++) {
+      disp[i].x += (cx - pos[i].x) * 0.04;
+      disp[i].y += (cy - pos[i].y) * 0.04;
+    }
+
+    // Apply with temperature cooling and clamp to bounds
+    for (let i = 0; i < pos.length; i++) {
+      const mag = Math.sqrt(disp[i].x ** 2 + disp[i].y ** 2) || 1;
+      pos[i].x += (disp[i].x / mag) * Math.min(mag, temp);
+      pos[i].y += (disp[i].y / mag) * Math.min(mag, temp);
+      pos[i].x = Math.max(R, Math.min(CW - R, pos[i].x));
+      pos[i].y = Math.max(R, Math.min(CH - R, pos[i].y));
+    }
+
+    temp *= 0.95;
+  }
+
+  return vertices.map((v, i) => ({ ...v, x: Math.round(pos[i].x), y: Math.round(pos[i].y) }));
+}
+
 export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onChange: (b: ContentBlock) => void }) {
   const { t } = useT();
   const svgRef     = useRef<SVGSVGElement>(null);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<string | null>(null);
-  const [dragOff,  setDragOff]  = useState({ x: 0, y: 0 });
-  const [didDrag,  setDidDrag]  = useState(false);
+  const [selected,    setSelected]    = useState<string | null>(null);
+  const [dragging,    setDragging]    = useState<string | null>(null);
+  const [dragOff,     setDragOff]     = useState({ x: 0, y: 0 });
+  const [didDrag,     setDidDrag]     = useState(false);
+  const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
 
-  const CW = 380, CH = 220, R = 14;
+  const CW = 380, CH = 340, R = 14;
 
   // Defensive defaults — graph data is hydrated by the parent on load,
   // but the slim persisted shape may still arrive without them.
@@ -109,6 +176,11 @@ export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onCha
     emit({ vertices: vertices.map(v => v.id === id ? { ...v, label } : v) });
   }
 
+  function handleAutoLayout() {
+    if (vertices.length < 2) return;
+    emit({ vertices: runForceLayout(vertices, edges, CW, CH, R) });
+  }
+
   const vMap = new Map(vertices.map(v => [v.id, v]));
   const selectedLabel = vertices.find(v => v.id === selected)?.label ?? '';
 
@@ -131,7 +203,7 @@ export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onCha
       </div>
 
       {/* Canvas */}
-      <div className="rounded-md border border-border overflow-hidden bg-muted/5">
+      <div className="rounded-md border-2 border-input overflow-hidden bg-muted/30">
         <div className="px-3 py-1.5 bg-muted/25 border-b border-border text-xs text-muted-foreground flex items-center gap-2">
           {selected
             ? <>
@@ -142,7 +214,18 @@ export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onCha
                   {t('admin.lessonEditor.cancelEdge')}
                 </button>
               </>
-            : <span>{t('admin.lessonEditor.graphCanvasHint')}</span>
+            : <>
+                <span>{t('admin.lessonEditor.graphCanvasHint')}</span>
+                {vertices.length >= 2 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleAutoLayout(); }}
+                    className="ml-auto shrink-0 px-2 py-0.5 rounded border border-border hover:bg-muted hover:text-foreground transition-colors"
+                    title={t('admin.lessonEditor.autoLayout')}
+                  >
+                    {t('admin.lessonEditor.autoLayout')}
+                  </button>
+                )}
+              </>
           }
         </div>
 
@@ -174,6 +257,9 @@ export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onCha
             const x1 = src.x + ux * R,  y1 = src.y + uy * R;
             const x2 = tgt.x - ux * (R + (directed ? 4 : 0));
             const y2 = tgt.y - uy * (R + (directed ? 4 : 0));
+            const hovered = hoveredEdge === i;
+            const strokeCls = hovered ? 'text-foreground' : 'text-muted-foreground';
+            const hoverLabel = `${src.label} → ${tgt.label}${edge.weight !== undefined ? ` (${edge.weight})` : ''}`;
             // Curve bidirectional directed edges so both arcs are visually distinct
             const curved = directed && edges.some(
               ed => ed.source === edge.target && ed.target === edge.source,
@@ -186,9 +272,11 @@ export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onCha
               const lx = 0.25 * x1 + 0.5 * cpx + 0.25 * x2;
               const ly = 0.25 * y1 + 0.5 * cpy + 0.25 * y2;
               return (
-                <g key={i} onContextMenu={(e) => handleEdgeCtx(e, i)} style={{ cursor: 'context-menu' }}>
-                  <path d={d} fill="none" stroke="currentColor" className="text-muted-foreground" strokeWidth={1.5}
-                    markerEnd="url(#ge-arrow)"
+                <g key={i} onContextMenu={(e) => handleEdgeCtx(e, i)}
+                  onMouseEnter={() => setHoveredEdge(i)} onMouseLeave={() => setHoveredEdge(null)}
+                  style={{ cursor: 'context-menu' }}>
+                  <path d={d} fill="none" stroke="currentColor" className={strokeCls}
+                    strokeWidth={hovered ? 2.5 : 1.5} markerEnd="url(#ge-arrow)"
                   />
                   <path d={d} fill="none" stroke="transparent" strokeWidth={12} />
                   {edge.weight !== undefined && (
@@ -196,19 +284,34 @@ export function GraphBlockEditor({ block, onChange }: { block: GraphBlock; onCha
                       {edge.weight}
                     </text>
                   )}
+                  {hovered && (
+                    <text x={lx} y={ly + (edge.weight !== undefined ? 10 : -4)} textAnchor="middle" fontSize={10}
+                      className="fill-foreground" style={{ pointerEvents: 'none', paintOrder: 'stroke', stroke: 'var(--background)', strokeWidth: 3 }}>
+                      {hoverLabel}
+                    </text>
+                  )}
                 </g>
               );
             }
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
             return (
-              <g key={i} onContextMenu={(e) => handleEdgeCtx(e, i)} style={{ cursor: 'context-menu' }}>
+              <g key={i} onContextMenu={(e) => handleEdgeCtx(e, i)}
+                onMouseEnter={() => setHoveredEdge(i)} onMouseLeave={() => setHoveredEdge(null)}
+                style={{ cursor: 'context-menu' }}>
                 <line x1={x1} y1={y1} x2={x2} y2={y2}
-                  stroke="currentColor" className="text-muted-foreground" strokeWidth={1.5}
+                  stroke="currentColor" className={strokeCls} strokeWidth={hovered ? 2.5 : 1.5}
                   markerEnd={directed ? 'url(#ge-arrow)' : undefined}
                 />
                 <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="transparent" strokeWidth={12} />
                 {edge.weight !== undefined && (
-                  <text x={(x1+x2)/2} y={(y1+y2)/2 - 6} textAnchor="middle" fontSize={10} className="fill-muted-foreground" style={{ pointerEvents: 'none' }}>
+                  <text x={mx} y={my - 6} textAnchor="middle" fontSize={10} className="fill-muted-foreground" style={{ pointerEvents: 'none' }}>
                     {edge.weight}
+                  </text>
+                )}
+                {hovered && (
+                  <text x={mx} y={my + (edge.weight !== undefined ? 14 : -6)} textAnchor="middle" fontSize={10}
+                    className="fill-foreground" style={{ pointerEvents: 'none', paintOrder: 'stroke', stroke: 'var(--background)', strokeWidth: 3 }}>
+                    {hoverLabel}
                   </text>
                 )}
               </g>

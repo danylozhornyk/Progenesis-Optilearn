@@ -137,7 +137,6 @@ export default function CourseDetailPage() {
                 courseId={course.id}
                 lessons={course.lessons}
                 accessByLesson={accessByLesson}
-                userLoggedIn={!!user}
               />
 
             </div>

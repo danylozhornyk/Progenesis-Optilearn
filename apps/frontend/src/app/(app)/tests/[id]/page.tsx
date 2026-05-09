@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useT } from '@/lib/i18n';
 import { api } from '@/lib/api';
@@ -12,6 +12,8 @@ import { ArrowLeftIcon } from './_components/icons';
 import { Timer } from './_components/Timer';
 import { TaskCard } from './_components/TaskCard';
 import { ResultsBanner } from './_components/ResultsBanner';
+import { LessonDrawer } from './_components/LessonDrawer';
+import { LeaveConfirmModal } from './_components/LeaveConfirmModal';
 import type {
   TestData,
   GradedAnswer,
@@ -26,6 +28,7 @@ import type {
 export default function TestPage() {
   const { id } = useParams<{ id: string }>();
   const { t, locale } = useT();
+  const router = useRouter();
   const { push: pushToasts } = useAchievementToasts();
 
   const [test, setTest] = useState<TestData | null>(null);
@@ -37,7 +40,22 @@ export default function TestPage() {
   const [timedOut, setTimedOut] = useState(false);
   /** True when the user already has a passing submission for this test. */
   const [alreadyPassed, setAlreadyPassed] = useState(false);
+  /** Number of submissions already made for this test (before the current session attempt). */
+  const [priorAttemptCount, setPriorAttemptCount] = useState(0);
+  /** True after the user submits their last allowed attempt without passing (promotion happened). */
+  const [attemptsExhausted, setAttemptsExhausted] = useState(false);
+  const [lessonOpen, setLessonOpen] = useState(false);
+  /** Href queued by the back-link click; non-null means the leave modal is open. */
+  const [leaveHref, setLeaveHref] = useState<string | null>(null);
   const startTime = useRef(Date.now());
+
+  // Warn on browser refresh / tab close while the test is in progress.
+  useEffect(() => {
+    if (result) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [result]);
 
   useEffect(() => {
     setLoading(true);
@@ -45,16 +63,21 @@ export default function TestPage() {
       api.get<TestData>(`/tests/${id}`),
       api.get<{
         id: string;
+        attemptNumber: number;
         totalScore: number | string;
         maxScore: number | string;
         percentScore: number | string;
         passed: boolean;
         answers: GradedAnswer[];
       } | null>(`/submissions/test/${id}/me`).catch(() => null),
+      api.get<{ testId: string }[]>('/submissions/my').catch(() => []),
     ])
-      .then(([data, mine]) => {
+      .then(([data, mine, allSubs]) => {
         setTest(data);
         startTime.current = Date.now();
+
+        const count = allSubs.filter((s) => s.testId === id).length;
+        setPriorAttemptCount(count);
 
         // If the user has already passed this test, render the previous result
         // immediately so they cannot start it again.
@@ -62,6 +85,22 @@ export default function TestPage() {
           setAlreadyPassed(true);
           setResult({
             submission: {
+              attemptNumber: mine.attemptNumber,
+              totalScore: Number(mine.totalScore),
+              maxScore: Number(mine.maxScore),
+              percentScore: Number(mine.percentScore),
+              passed: mine.passed,
+              answers: mine.answers,
+              test: { title: data.title, passingScore: Number(data.passingScore) },
+            },
+            newAchievements: [],
+          });
+        } else if (mine && data.maxAttempts !== null && count >= data.maxAttempts) {
+          // All attempts used and still not passed — promotion already happened server-side.
+          setAttemptsExhausted(true);
+          setResult({
+            submission: {
+              attemptNumber: mine.attemptNumber,
               totalScore: Number(mine.totalScore),
               maxScore: Number(mine.maxScore),
               percentScore: Number(mine.percentScore),
@@ -110,6 +149,11 @@ export default function TestPage() {
         timeSpentMs: Date.now() - startTime.current,
       });
       setResult(res);
+      const newCount = priorAttemptCount + 1;
+      setPriorAttemptCount(newCount);
+      if (test.maxAttempts !== null && newCount >= test.maxAttempts && !res.submission.passed) {
+        setAttemptsExhausted(true);
+      }
       // Show achievement toast cards for every newly-earned badge
       if (res.newAchievements?.length) {
         pushToasts(res.newAchievements);
@@ -136,7 +180,7 @@ export default function TestPage() {
   }, [handleSubmit]);
 
   function handleRetry() {
-    if (alreadyPassed) return; // hard-block retake of a passed test
+    if (alreadyPassed || attemptsExhausted) return;
     setResult(null);
     setAnswers({});
     setTimedOut(false);
@@ -162,6 +206,10 @@ export default function TestPage() {
 
   if (!test) return null;
 
+  const nextAttemptNumber = priorAttemptCount + 1;
+  const nextCoefficient = nextAttemptNumber === 1 ? 1.0 : nextAttemptNumber === 2 ? 0.8 : 0.6;
+  const isLastAttempt = test.maxAttempts !== null && nextAttemptNumber >= test.maxAttempts;
+
   const gradedMap = result
     ? new Map(result.submission.answers.map((a) => [a.taskId, a]))
     : null;
@@ -176,15 +224,38 @@ export default function TestPage() {
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-10 animate-fade-in">
 
-        {/* Back link */}
+        {/* Back link + sticky open-lesson button */}
         {test.lesson && (
-          <Link
-            href={`/courses/${test.lesson.course.id}/lessons/${test.lesson.id}`}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeftIcon />
-            {lessonTitle}
-          </Link>
+          <div className="flex items-center justify-between gap-3 mb-6 sticky top-14 z-20 bg-background/90 backdrop-blur-sm -mx-6 px-6 py-2">
+            {result ? (
+              <Link
+                href={`/courses/${test.lesson.course.id}/lessons/${test.lesson.id}`}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeftIcon />
+                {lessonTitle}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setLeaveHref(`/courses/${test.lesson.course.id}/lessons/${test.lesson.id}`)}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeftIcon />
+                {lessonTitle}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setLessonOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              {t('test.openLesson')}
+            </button>
+          </div>
         )}
 
         {/* Test header */}
@@ -210,10 +281,28 @@ export default function TestPage() {
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span>{t('lesson.tasks', { count: test.tasks.length })}</span>
             <span>{t('lesson.passing', { score: Math.round(Number(test.passingScore)) })}</span>
-            {test.maxAttempts && (
-              <span>{t('lesson.attempts', { max: test.maxAttempts })}</span>
+            {test.maxAttempts && !result && (
+              <span className="font-medium text-foreground">
+                {t('test.attemptOf', { n: nextAttemptNumber, max: test.maxAttempts })}
+              </span>
             )}
           </div>
+
+          {/* Coefficient / last-attempt notices — only before submitting */}
+          {!result && (
+            <>
+              {nextCoefficient < 1.0 && (
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  {t('test.coefficientNotice', { coeff: nextCoefficient })}
+                </p>
+              )}
+              {isLastAttempt && (
+                <p className="text-xs text-orange-700 dark:text-orange-400 font-medium">
+                  {t('test.lastAttemptWarning')}
+                </p>
+              )}
+            </>
+          )}
         </div>
 
         {/* Timed-out notice */}
@@ -231,7 +320,9 @@ export default function TestPage() {
               onRetry={handleRetry}
               courseId={test.lesson.course.id}
               lessonId={test.lesson.id}
-              lockRetry={alreadyPassed}
+              lockRetry={alreadyPassed || attemptsExhausted}
+              maxAttempts={test.maxAttempts}
+              attemptsExhausted={attemptsExhausted}
             />
           </div>
         )}
@@ -270,6 +361,19 @@ export default function TestPage() {
       </main>
 
       <Footer />
+
+      <LessonDrawer
+        lessonId={test.lesson.id}
+        lessonTitle={lessonTitle}
+        isOpen={lessonOpen}
+        onClose={() => setLessonOpen(false)}
+      />
+
+      <LeaveConfirmModal
+        isOpen={leaveHref !== null}
+        onConfirm={() => { router.push(leaveHref!); setLeaveHref(null); }}
+        onCancel={() => setLeaveHref(null)}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { Prisma } from '../../generated/prisma';
 import { prisma } from '../db/prisma';
-import { generateRecommendations } from '../ai/recommendations.ai';
+import { generateRecommendations, type AiAnalysis } from '../ai/recommendations.ai';
 
 export async function generateAndSaveRecommendation(userId: string) {
   // ── Cooldown guard — max one analysis per 30 minutes ─────────
@@ -69,17 +69,33 @@ export async function generateAndSaveRecommendation(userId: string) {
     })),
   };
 
+  // ── Compute stats from raw submission data ────────────────────
+  const total = submissions.length;
+  const avgScore =
+    total > 0
+      ? Math.round(
+          (submissions.reduce((sum, s) => sum + Number(s.percentScore), 0) / total) * 10,
+        ) / 10
+      : 0;
+  const passRate =
+    total > 0
+      ? Math.round((submissions.filter((s) => s.passed).length / total) * 1000) / 10
+      : 0;
+  const stats: AiAnalysis['stats'] = { totalAttempts: total, avgScore, passRate };
+
   // ── Call the AI (returns BOTH English and Ukrainian) ──────────
   const bilingual = await generateRecommendations(userData);
 
+  // ── Merge computed stats into both language versions ──────────
+  const analysisEn: AiAnalysis = { ...bilingual.en, stats };
+  const analysisUk: AiAnalysis = { ...bilingual.uk, stats };
+
   // ── Save both language versions to DB ─────────────────────────
-  // Cast through unknown → Prisma.InputJsonValue: AiAnalysis is shaped JSON
-  // but TS can't prove it satisfies Prisma's recursive InputJsonValue type.
   const recommendation = await prisma.aiRecommendation.create({
     data: {
       userId,
-      analysis: bilingual.en as unknown as Prisma.InputJsonValue,
-      analysisUk: bilingual.uk as unknown as Prisma.InputJsonValue,
+      analysis: analysisEn as unknown as Prisma.InputJsonValue,
+      analysisUk: analysisUk as unknown as Prisma.InputJsonValue,
     },
   });
 

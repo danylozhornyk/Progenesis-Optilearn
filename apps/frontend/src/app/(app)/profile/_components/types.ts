@@ -7,15 +7,31 @@ export type Tab = 'personal' | 'progress' | 'achievements' | 'recommendations';
 export type RecommendationPriority = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export interface AiAnalysis {
-  overallPerformance: string;
-  weakAreas: { topic: string; reason: string }[];
-  strongAreas: { topic: string; reason: string }[];
-  recommendations: {
+  // ── New format ───────────────────────────────────────────────
+  summary?: string;
+  stats?: {
+    totalAttempts: number;
+    avgScore: number;
+    passRate: number;
+  };
+  weakPoints?: { topic: string; detail: string }[];
+  strongPoints?: { topic: string; detail: string }[];
+  roadmap?: {
+    step: number;
+    title: string;
+    description: string;
+    priority: RecommendationPriority;
+  }[];
+  // ── Legacy format (rows generated before restructure) ────────
+  overallPerformance?: string;
+  weakAreas?: { topic: string; reason: string }[];
+  strongAreas?: { topic: string; reason: string }[];
+  recommendations?: {
     priority: RecommendationPriority;
     action: string;
     reason: string;
   }[];
-  nextSteps: string[];
+  nextSteps?: string[];
 }
 
 export interface AiRecommendation {
@@ -41,6 +57,7 @@ export interface CourseProgress {
   passedTests: number;
   earnedMarks: number;
   maxMarks: number;
+  attemptedMaxMarks: number;
   progressPercent: number;
   totalScore: number;
   enrolled: boolean;

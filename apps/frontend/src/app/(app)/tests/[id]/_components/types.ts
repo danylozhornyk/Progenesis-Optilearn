@@ -77,6 +77,7 @@ export interface NewAchievement {
 
 export interface SubmissionResult {
   submission: {
+    attemptNumber: number;
     totalScore: number;
     maxScore: number;
     percentScore: number;

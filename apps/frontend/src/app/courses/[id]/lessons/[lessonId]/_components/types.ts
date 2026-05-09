@@ -55,6 +55,7 @@ export interface LessonAccess {
   passedTestCount: number;
   allTestsPassed: boolean;
   unlocked: boolean;
+  testsUnlocked: boolean;
   blockingLessonId: string | null;
 }
 

@@ -4,28 +4,41 @@ const client = new Anthropic({
   apiKey: process.env.AI_API_KEY,
 });
 
-export interface AiAnalysis {
-  overallPerformance: string;
-  weakAreas: {
-    topic: string;
-    reason: string;
-  }[];
-  strongAreas: {
-    topic: string;
-    reason: string;
-  }[];
-  recommendations: {
+/** Text-only fields the model returns (stats are computed separately). */
+interface AiAnalysisCore {
+  summary: string;
+  weakPoints: { topic: string; detail: string }[];
+  strongPoints: { topic: string; detail: string }[];
+  roadmap: {
+    step: number;
+    title: string;
+    description: string;
     priority: 'HIGH' | 'MEDIUM' | 'LOW';
-    action: string;
-    reason: string;
   }[];
-  nextSteps: string[];
 }
 
-/** Bilingual envelope: each generation produces both EN and UK versions. */
+/** Full stored analysis — core text + computed stats injected by the service. */
+export interface AiAnalysis {
+  summary: string;
+  stats: {
+    totalAttempts: number;
+    avgScore: number;
+    passRate: number;
+  };
+  weakPoints: { topic: string; detail: string }[];
+  strongPoints: { topic: string; detail: string }[];
+  roadmap: {
+    step: number;
+    title: string;
+    description: string;
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  }[];
+}
+
+/** Bilingual envelope returned by the AI call. */
 export interface AiAnalysisBilingual {
-  en: AiAnalysis;
-  uk: AiAnalysis;
+  en: AiAnalysisCore;
+  uk: AiAnalysisCore;
 }
 
 interface UserData {
@@ -44,13 +57,6 @@ interface UserData {
   }[];
 }
 
-/**
- * Asks the model for one analysis in English AND one in Ukrainian, returned
- * together in a single JSON envelope so we save both versions to the database
- * and the frontend can pick by locale without re-querying. Topic / action
- * keys must remain identical between languages — they're translations of the
- * same analysis, not two independent runs.
- */
 export async function generateRecommendations(
   userData: UserData,
 ): Promise<AiAnalysisBilingual> {
@@ -67,7 +73,6 @@ export async function generateRecommendations(
     .map((b) => b.text)
     .join('');
 
-  // Strip markdown code fences if present
   const clean = text.replace(/```json|```/g, '').trim();
   const parsed = JSON.parse(clean) as AiAnalysisBilingual;
 
@@ -84,10 +89,11 @@ You are an educational AI assistant analyzing a student's performance on a math 
 
 Student: ${userData.fullName}
 
-Test submission history:
+Test submission history (most recent first):
 ${userData.submissions
   .map(
-    (s) => `- "${s.testTitle}" (${s.topic}): ${s.percentScore.toFixed(1)}% score, ${s.passed ? 'PASSED' : 'FAILED'}, attempt #${s.attemptNumber}, ${s.answers.filter((a) => a.isCorrect).length}/${s.answers.length} correct answers`
+    (s) =>
+      `- "${s.testTitle}" (${s.topic}): ${s.percentScore.toFixed(1)}% score, ${s.passed ? 'PASSED' : 'FAILED'}, attempt #${s.attemptNumber}, ${s.answers.filter((a) => a.isCorrect).length}/${s.answers.length} correct`,
   )
   .join('\n')}
 
@@ -96,33 +102,33 @@ ${userData.progress
   .map((p) => `- "${p.courseTitle}": ${p.progressPercent.toFixed(1)}% complete`)
   .join('\n')}
 
-Analyze this student's performance and return ONLY a JSON object with no markdown, no explanation, just raw JSON.
+Analyze the student's performance. Return ONLY raw JSON — no markdown, no explanation.
 
-Produce TWO versions of the same analysis: one in English under the "en" key, and an exact translation in Ukrainian under the "uk" key. Both must use the same structure shown below. Translate every text value (including topic names and priority reasoning) — keep "priority" enum values ("HIGH" / "MEDIUM" / "LOW") in English in BOTH versions, since the frontend localizes them itself.
+Produce two versions: English under "en", exact Ukrainian translation under "uk". Both share the same structure. Keep "priority" enum values ("HIGH" / "MEDIUM" / "LOW") in English in both versions — the frontend translates them. Translate every other text value.
 
-Exact structure:
+Rules for the content:
+- "summary": 2–3 concise sentences capturing overall progress, trend, and one key takeaway.
+- "weakPoints": up to 3 topics the student consistently struggled with; "detail" explains the pattern briefly.
+- "strongPoints": up to 3 topics the student performed well on; "detail" explains what evidence supports this.
+- "roadmap": 3–5 ordered action steps from most to least urgent. Each step has a short "title" (action phrase) and a one-sentence "description". Assign "priority" HIGH/MEDIUM/LOW based on impact and urgency. Steps must be concrete and platform-actionable (retake tests, review lessons, etc.).
+
+Exact JSON structure:
 {
   "en": {
-    "overallPerformance": "brief overall assessment string",
-    "weakAreas": [
-      { "topic": "topic name", "reason": "why this is a weak area" }
-    ],
-    "strongAreas": [
-      { "topic": "topic name", "reason": "why this is a strong area" }
-    ],
-    "recommendations": [
-      { "priority": "HIGH|MEDIUM|LOW", "action": "specific action to take", "reason": "why this is recommended" }
-    ],
-    "nextSteps": ["step 1", "step 2", "step 3"]
+    "summary": "...",
+    "weakPoints": [{ "topic": "...", "detail": "..." }],
+    "strongPoints": [{ "topic": "...", "detail": "..." }],
+    "roadmap": [
+      { "step": 1, "title": "...", "description": "...", "priority": "HIGH" }
+    ]
   },
   "uk": {
-    "overallPerformance": "...",
-    "weakAreas": [ { "topic": "...", "reason": "..." } ],
-    "strongAreas": [ { "topic": "...", "reason": "..." } ],
-    "recommendations": [
-      { "priority": "HIGH|MEDIUM|LOW", "action": "...", "reason": "..." }
-    ],
-    "nextSteps": ["...", "...", "..."]
+    "summary": "...",
+    "weakPoints": [{ "topic": "...", "detail": "..." }],
+    "strongPoints": [{ "topic": "...", "detail": "..." }],
+    "roadmap": [
+      { "step": 1, "title": "...", "description": "...", "priority": "HIGH" }
+    ]
   }
 }
 `.trim();

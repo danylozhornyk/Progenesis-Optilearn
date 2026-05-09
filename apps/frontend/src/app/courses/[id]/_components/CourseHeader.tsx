@@ -49,7 +49,7 @@ export function CourseHeader({ course }: { course: Course }) {
         </h1>
 
         {/* Description */}
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed text-justify">
           {description}
         </p>
 

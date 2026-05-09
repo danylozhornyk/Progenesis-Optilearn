@@ -39,9 +39,9 @@ export async function submitTest(data: {
   });
   if (alreadyPassed) throw new Error('TEST_ALREADY_PASSED');
 
-  // ── 1b. Enforce lesson-progression gate ─────────────────────
+  // ── 1b. Enforce test-progression gate ───────────────────────
   const access = await getLessonAccess(data.userId, test.lessonId);
-  if (access && !access.unlocked) {
+  if (access && !access.testsUnlocked) {
     throw new Error('LESSON_LOCKED');
   }
 
@@ -94,17 +94,21 @@ export async function submitTest(data: {
     };
   });
 
-  const percentScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+  // ── 5. Apply attempt coefficient to earned score ────────────
+  // Attempt 1 → ×1.0, attempt 2 → ×0.8, attempt 3+ → ×0.6
+  const coefficient = attemptNumber === 1 ? 1.0 : attemptNumber === 2 ? 0.8 : 0.6;
+  const adjustedTotalScore = Math.round(totalScore * coefficient);
+  const percentScore = maxScore > 0 ? (adjustedTotalScore / maxScore) * 100 : 0;
   const passed = percentScore >= Number(test.passingScore);
 
-  // ── 5. Save submission and all answers in one transaction ───
+  // ── 6. Save submission ──────────────────────────────────────
   const submission = await prisma.testSubmission.create({
   data: {
     userId: data.userId,
     testId: data.testId,
     attemptNumber,
     status: 'GRADED',
-    totalScore,
+    totalScore: adjustedTotalScore,
     maxScore,
     percentScore,
     passed,
@@ -116,10 +120,27 @@ export async function submitTest(data: {
   },
 });
 
-  // ── 6. Update user progress ─────────────────────────────────
-  await updateUserProgress(data.userId, test, totalScore);
+  // ── 6a. Promote best attempt if max attempts exhausted ──────
+  // If this was the last allowed attempt and the user still hasn't passed,
+  // find the highest-scoring submission and mark it passed so they can proceed.
+  if (test.maxAttempts !== null && !passed && attemptNumber >= test.maxAttempts) {
+    const bestSubmission = await prisma.testSubmission.findFirst({
+      where: { userId: data.userId, testId: data.testId },
+      orderBy: { percentScore: 'desc' },
+      select: { id: true },
+    });
+    if (bestSubmission) {
+      await prisma.testSubmission.update({
+        where: { id: bestSubmission.id },
+        data: { passed: true },
+      });
+    }
+  }
 
-  // ── 7. Check and award achievements ────────────────────────
+  // ── 7. Update user progress ─────────────────────────────────
+  await updateUserProgress(data.userId, test, adjustedTotalScore);
+
+  // ── 8. Check and award achievements ────────────────────────
   const newAchievements = await checkAndAwardAchievements(data.userId, {
     passed,
     percentScore,

@@ -18,6 +18,7 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageUploadInput } from '@/components/ImageUploadInput';
+import { Pencil, Trash2, Globe, EyeOff } from 'lucide-react';
 
 type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 type Status     = 'DRAFT' | 'PUBLISHED';
@@ -70,6 +71,17 @@ export default function AdminCoursesPage() {
   const [form, setForm]           = useState<CourseFormState | null>(null);
   const [saving, setSaving]       = useState(false);
   const [publishing, setPublishing] = useState<string | null>(null); // course id being toggled
+  const [search, setSearch]       = useState('');
+  const [page, setPage]           = useState(1);
+  const PAGE_SIZE = 10;
+
+  const filtered = courses.filter((c) =>
+    !search.trim() ||
+    c.title.toLowerCase().includes(search.toLowerCase()) ||
+    (c.titleUk?.toLowerCase().includes(search.toLowerCase()) ?? false)
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function load() {
     setLoading(true);
@@ -143,14 +155,26 @@ export default function AdminCoursesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{t('admin.courses.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('admin.courses.subtitle')}</p>
         </div>
-        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM })}>
+        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM })} className="self-start sm:self-auto">
           + {t('admin.courses.add')}
         </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder={t('admin.courses.search')}
+          className="h-8 max-w-xs text-sm"
+        />
+        <span className="text-xs text-muted-foreground tabular-nums ml-auto">
+          {filtered.length} / {courses.length}
+        </span>
       </div>
 
       {error && (
@@ -161,10 +185,12 @@ export default function AdminCoursesPage() {
       <div className="surface border border-border rounded-lg overflow-hidden">
         {loading ? (
           <div className="p-6 text-sm text-muted-foreground">{t('common.loading')}</div>
-        ) : courses.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="p-6 text-sm text-muted-foreground">{t('admin.courses.empty')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <>
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium w-10">{t('admin.courses.colCover')}</th>
@@ -176,7 +202,7 @@ export default function AdminCoursesPage() {
               </tr>
             </thead>
             <tbody>
-              {courses.map((c) => {
+              {paginated.map((c) => {
                 const isPublishing = publishing === c.id;
                 return (
                   <tr key={c.id} className="border-t border-border hover:bg-muted/20">
@@ -206,56 +232,77 @@ export default function AdminCoursesPage() {
                         {c.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right space-x-1">
-                      {/* Publish / Unpublish toggle */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={isPublishing}
-                        onClick={() => handleTogglePublish(c)}
-                        className={
-                          c.status === 'DRAFT'
-                            ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700'
-                            : 'text-amber-600 dark:text-amber-400 hover:text-amber-700'
-                        }
-                      >
-                        {isPublishing
-                          ? t('admin.courses.publishing')
-                          : c.status === 'DRAFT'
-                            ? t('admin.courses.publish')
-                            : t('admin.courses.unpublish')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setForm({
-                          id: c.id,
-                          title: c.title,
-                          titleUk: c.titleUk ?? '',
-                          description: c.description,
-                          descriptionUk: c.descriptionUk ?? '',
-                          discipline: c.discipline,
-                          disciplineUk: c.disciplineUk ?? '',
-                          difficulty: c.difficulty,
-                          coverImageUrl: c.coverImageUrl ?? '',
-                        })}
-                      >
-                        {t('common.edit')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(c)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-700"
-                      >
-                        {t('common.delete')}
-                      </Button>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col items-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={isPublishing}
+                          onClick={() => handleTogglePublish(c)}
+                          className={`gap-1.5 ${
+                            c.status === 'DRAFT'
+                              ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700'
+                              : 'text-amber-600 dark:text-amber-400 hover:text-amber-700'
+                          }`}
+                        >
+                          {c.status === 'DRAFT'
+                            ? <Globe className="h-3.5 w-3.5" />
+                            : <EyeOff className="h-3.5 w-3.5" />}
+                          {isPublishing
+                            ? t('admin.courses.publishing')
+                            : c.status === 'DRAFT'
+                              ? t('admin.courses.publish')
+                              : t('admin.courses.unpublish')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1.5"
+                          onClick={() => setForm({
+                            id: c.id,
+                            title: c.title,
+                            titleUk: c.titleUk ?? '',
+                            description: c.description,
+                            descriptionUk: c.descriptionUk ?? '',
+                            discipline: c.discipline,
+                            disciplineUk: c.disciplineUk ?? '',
+                            difficulty: c.difficulty,
+                            coverImageUrl: c.coverImageUrl ?? '',
+                          })}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          {t('common.edit')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(c)}
+                          className="gap-1.5 text-red-600 dark:text-red-400 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {t('common.delete')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-border">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p - 1)} disabled={page === 1}>←</Button>
+                <span className="text-xs tabular-nums px-2 text-muted-foreground">{page} / {totalPages}</span>
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>→</Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 
@@ -273,7 +320,7 @@ export default function AdminCoursesPage() {
               </p>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label={t('admin.courses.fTitle')}>
                 <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </Field>
@@ -282,7 +329,7 @@ export default function AdminCoursesPage() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label={t('admin.courses.fDescription')}>
                 <textarea
                   value={form.description}
@@ -301,7 +348,7 @@ export default function AdminCoursesPage() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label={t('admin.courses.fDiscipline')}>
                 <Input value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value })} />
               </Field>

@@ -4,6 +4,7 @@ import {
   setCachedLessons,
   invalidateLessonsCache,
 } from '../cache/lessons.cache';
+import { invalidateCourseCache } from '../cache/courses.cache';
 
 export async function getLessonsByCourse(courseId: string) {
   const cached = await getCachedLessons(courseId);
@@ -61,7 +62,10 @@ export async function createLesson(data: {
   prerequisiteId?: string;
 }) {
   const lesson = await prisma.lesson.create({ data });
-  await invalidateLessonsCache(data.courseId);
+  await Promise.all([
+    invalidateLessonsCache(data.courseId),
+    invalidateCourseCache(data.courseId),
+  ]);
   return lesson;
 }
 
@@ -75,7 +79,10 @@ export async function updateLesson(id: string, data: {
   orderIndex?: number;
 }) {
   const lesson = await prisma.lesson.update({ where: { id }, data });
-  await invalidateLessonsCache(lesson.courseId);
+  await Promise.all([
+    invalidateLessonsCache(lesson.courseId),
+    invalidateCourseCache(lesson.courseId),
+  ]);
   return lesson;
 }
 
@@ -114,13 +121,14 @@ export async function getCourseLessonAccess(userId: string, courseId: string) {
     passedTestCount: number;
     allTestsPassed: boolean;
     unlocked: boolean;
+    testsUnlocked: boolean;
   }[] = [];
 
-  let prevMandatoryAllPassed = true; // first lesson is always unlocked
+  let prevMandatoryAllPassed = true; // first lesson always has tests unlocked
   for (const lesson of lessons) {
     const passedCount = lesson.tests.filter((t) => passedTestIds.has(t.id)).length;
     const allTestsPassed = lesson.tests.length === 0 || passedCount === lesson.tests.length;
-    const unlocked = prevMandatoryAllPassed;
+    const testsUnlocked = prevMandatoryAllPassed;
 
     result.push({
       lessonId: lesson.id,
@@ -128,7 +136,8 @@ export async function getCourseLessonAccess(userId: string, courseId: string) {
       testCount: lesson.tests.length,
       passedTestCount: passedCount,
       allTestsPassed,
-      unlocked,
+      unlocked: true, // lessons are always viewable
+      testsUnlocked,
     });
 
     if (lesson.isMandatory) {
@@ -155,12 +164,11 @@ export async function getLessonAccess(userId: string, lessonId: string) {
   const idx = all.findIndex((l) => l.lessonId === lessonId);
   if (idx < 0) return null;
 
-  // Find the most recent previous MANDATORY lesson that isn't fully passed
+  // Find the most recent previous MANDATORY lesson that isn't fully passed (blocks test access)
   let blockingLessonId: string | null = null;
   for (let i = idx - 1; i >= 0; i--) {
     const prev = all[i];
     if (!prev.allTestsPassed) {
-      // need to check if it's mandatory too — re-fetch isMandatory
       const prevLesson = await prisma.lesson.findUnique({
         where: { id: prev.lessonId },
         select: { isMandatory: true },

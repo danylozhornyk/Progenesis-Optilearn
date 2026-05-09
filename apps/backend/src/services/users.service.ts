@@ -214,6 +214,7 @@ export async function getDetailedCourseProgress(userId: string) {
     let passedTests = 0;
     let earnedMarks = 0;
     let maxMarks = 0;
+    let attemptedMaxMarks = 0;
 
     for (const lesson of c.lessons) {
       totalLessons++;
@@ -227,7 +228,10 @@ export async function getDetailedCourseProgress(userId: string) {
       for (const test of lesson.tests) {
         const testMax = test.tasks.reduce((sum, t) => sum + Number(t.maxScore), 0);
         maxMarks += testMax;
-        earnedMarks += bestScoreByTest.get(test.id) ?? 0;
+        if (bestScoreByTest.has(test.id)) {
+          attemptedMaxMarks += testMax;
+          earnedMarks += bestScoreByTest.get(test.id)!;
+        }
       }
     }
 
@@ -265,6 +269,7 @@ export async function getDetailedCourseProgress(userId: string) {
       passedTests,
       earnedMarks: Math.round(earnedMarks * 100) / 100,
       maxMarks: Math.round(maxMarks * 100) / 100,
+      attemptedMaxMarks: Math.round(attemptedMaxMarks * 100) / 100,
       progressPercent,
       totalScore: progress?.totalScore ?? 0,
       enrolled,

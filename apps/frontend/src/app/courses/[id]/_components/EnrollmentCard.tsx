@@ -74,23 +74,16 @@ export function EnrollmentCard({
               style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
             />
           </div>
-          <div className="flex items-center gap-2 flex-wrap pt-1">
-            {continueHref && !completed && (
+          {continueHref && !completed && (
+            <div className="flex items-center gap-2 flex-wrap pt-1">
               <Link
                 href={continueHref}
                 className="inline-flex items-center px-3 py-1.5 rounded-md bg-foreground text-background text-xs font-medium hover:opacity-90 transition-opacity"
               >
                 {t('courses.continueLearning')}
               </Link>
-            )}
-            <button
-              type="button"
-              onClick={onUnenroll}
-              className="inline-flex items-center px-3 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              {t('courses.leaveCourse')}
-            </button>
-          </div>
+            </div>
+          )}
         </>
       ) : (
         <button

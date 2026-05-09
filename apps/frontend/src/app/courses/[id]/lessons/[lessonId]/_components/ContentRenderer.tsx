@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import GraphRenderer, { GraphData } from '@/components/GraphRenderer';
 import type { ContentBlock } from './types';
 import { ChartSvg } from '@/app/(app)/admin/lessons/_components/LessonStructureEditor';
+import { renderInline } from '@/lib/richText';
 
 /**
  * Renders one display-mode KaTeX equation; falls back to a <code> block when
@@ -58,7 +59,7 @@ function GraphBlockRenderer({ graphId }: { graphId: string }) {
   const title = (locale === 'uk' && graph.titleUk) ? graph.titleUk : graph.title;
   return (
     <div className="space-y-1.5 my-2 flex flex-col items-center">
-      <GraphRenderer graph={graph} height={280} />
+      <GraphRenderer graph={graph} height={280} mode="explore" />
       {title && (
         <p className="text-[11px] text-muted-foreground italic text-center">{title}</p>
       )}
@@ -106,19 +107,19 @@ function renderTextBlock(value: string) {
     if (seg.type === 'ul')
       return (
         <ul key={i} className="list-disc list-outside pl-5 space-y-1 text-sm text-muted-foreground leading-relaxed text-justify">
-          {seg.items.map((item, j) => <li key={j}>{item}</li>)}
+          {seg.items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
         </ul>
       );
     if (seg.type === 'ol')
       return (
         <ol key={i} className="list-decimal list-outside pl-5 space-y-1 text-sm text-muted-foreground leading-relaxed text-justify">
-          {seg.items.map((item, j) => <li key={j}>{item}</li>)}
+          {seg.items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
         </ol>
       );
     return (
       <p key={i} className="text-sm text-muted-foreground leading-relaxed text-justify">
         {seg.lines.map((line, j) => (
-          <Fragment key={j}>{j > 0 && <br />}{line}</Fragment>
+          <Fragment key={j}>{j > 0 && <br />}{renderInline(line)}</Fragment>
         ))}
       </p>
     );
@@ -156,7 +157,7 @@ export function ContentRenderer({ blocks }: { blocks: ContentBlock[] }) {
           case 'chart':
             return (
               <div key={i} className="my-2">
-                <ChartSvg block={block} />
+                <ChartSvg block={block} interactive />
               </div>
             );
 

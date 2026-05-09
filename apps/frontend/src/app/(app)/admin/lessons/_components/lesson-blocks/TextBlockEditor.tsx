@@ -1,17 +1,17 @@
 'use client';
 
 import { useT } from '@/lib/i18n';
+import { RichTextarea } from '@/components/RichTextarea';
 import { ContentBlock, TextBlock } from './types';
 
 export function TextBlockEditor({ block, onChange }: { block: TextBlock; onChange: (b: ContentBlock) => void }) {
   const { t } = useT();
   return (
-    <textarea
+    <RichTextarea
       value={block.value}
-      onChange={(e) => onChange({ ...block, value: e.target.value })}
+      onChange={(v) => onChange({ ...block, value: v })}
       rows={4}
       placeholder={t('admin.lessonEditor.textPlaceholder')}
-      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y min-h-[80px]"
     />
   );
 }

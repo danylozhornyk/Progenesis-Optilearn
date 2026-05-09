@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Pencil, Trash2 } from 'lucide-react';
 
 type Role = 'STUDENT' | 'ADMIN';
 
@@ -49,6 +50,9 @@ export default function AdminUsersPage() {
   const [error, setError]     = useState('');
   const [form, setForm]       = useState<UserFormState | null>(null);
   const [saving, setSaving]   = useState(false);
+  const [search, setSearch]   = useState('');
+  const [page, setPage]       = useState(1);
+  const PAGE_SIZE = 10;
 
   function load() {
     setLoading(true);
@@ -106,16 +110,36 @@ export default function AdminUsersPage() {
     }
   }
 
+  const filtered = users.filter((u) =>
+    !search.trim() ||
+    u.fullName.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{t('admin.users.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('admin.users.subtitle')}</p>
         </div>
-        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM })}>
+        <Button size="sm" onClick={() => setForm({ ...EMPTY_FORM })} className="self-start sm:self-auto">
           + {t('admin.users.add')}
         </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder={t('admin.users.search')}
+          className="h-8 max-w-xs text-sm"
+        />
+        <span className="text-xs text-muted-foreground tabular-nums ml-auto">
+          {filtered.length} / {users.length}
+        </span>
       </div>
 
       {error && (
@@ -125,10 +149,12 @@ export default function AdminUsersPage() {
       <div className="surface border border-border rounded-lg overflow-hidden">
         {loading ? (
           <div className="p-6 text-sm text-muted-foreground">{t('common.loading')}</div>
-        ) : users.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="p-6 text-sm text-muted-foreground">{t('admin.users.empty')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <>
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[580px]">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium">{t('admin.users.colName')}</th>
@@ -140,7 +166,7 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {paginated.map((u) => (
                 <tr key={u.id} className="border-t border-border hover:bg-muted/20">
                   <td className="px-4 py-3 font-medium">{u.fullName}</td>
                   <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
@@ -159,27 +185,45 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3 text-muted-foreground tabular-nums">
                     {new Date(u.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3 text-right space-x-1">
-                    <Button size="sm" variant="ghost" onClick={() => setForm({
-                      id: u.id,
-                      email: u.email,
-                      fullName: u.fullName,
-                      role: u.role,
-                      password: '',
-                    })}>
-                      {t('common.edit')}
-                    </Button>
-                    <Button size="sm" variant="ghost"
-                      onClick={() => handleDelete(u)}
-                      disabled={currentUser?.id === u.id}
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 disabled:opacity-40">
-                      {t('common.delete')}
-                    </Button>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col items-end gap-1">
+                      <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setForm({
+                        id: u.id,
+                        email: u.email,
+                        fullName: u.fullName,
+                        role: u.role,
+                        password: '',
+                      })}>
+                        <Pencil className="h-3.5 w-3.5" />
+                        {t('common.edit')}
+                      </Button>
+                      <Button size="sm" variant="ghost"
+                        onClick={() => handleDelete(u)}
+                        disabled={currentUser?.id === u.id}
+                        className="gap-1.5 text-red-600 dark:text-red-400 hover:text-red-700 disabled:opacity-40">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {t('common.delete')}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-border">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p - 1)} disabled={page === 1}>←</Button>
+                <span className="text-xs tabular-nums px-2 text-muted-foreground">{page} / {totalPages}</span>
+                <Button size="sm" variant="ghost" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>→</Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 
